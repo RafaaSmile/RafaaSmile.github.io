@@ -1,0 +1,42 @@
+{
+  "name": "portfolio-rafael-batista",
+  "version": "1.0.0",
+  "description": "Portfólio profissional de Rafael Batista de Lima - Designer Gráfico",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8000",
+    "build": "echo 'Projeto já está pronto para produção'",
+    "deploy": "echo 'Consulte docs/deployment.md para instruções de hospedagem'"
+  },
+  "keywords": [
+    "portfolio",
+    "design",
+    "graphic-design",
+    "photoshop",
+    "canva",
+    "web-design",
+    "rafael-batista"
+  ],
+  "author": {
+    "name": "Rafael Batista de Lima",
+    "url": "https://wa.me/5543999058527"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usuario/portfolio-rafael-batista.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usuario/portfolio-rafael-batista/issues"
+  },
+  "homepage": "https://github.com/usuario/portfolio-rafael-batista#readme",
+  "dependencies": {},
+  "devDependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
+

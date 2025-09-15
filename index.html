@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portfólio — Rafael Batista</title>
+  <meta name="description"
+    content="Portfólio de um designer gráfico com foco em artes para social media, manipulação de imagens e identidade visual, usando Photoshop e Canva." />
+
+  <!-- Tipografia: Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Unbounded:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Nunito:wght@400;600;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Swiper.js CSS from CDN for Carousel -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+  <!-- CSS Customizado -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+
+<body>
+  <!-- Progress bar global -->
+  <div id="globalProgress" aria-hidden="true"></div>
+
+  <!-- SVG sprite: ícones & filtros -->
+  <svg width="0" height="0" style="position:absolute; display: none;" aria-hidden="true">
+    <defs>
+      <!-- Grão / ruído -->
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="2" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+        <feComponentTransfer>
+          <feFuncA type="table" tableValues="0 0.12 0.18 0.22 0.24" />
+        </feComponentTransfer>
+      </filter>
+      <!-- Ícones -->
+      <symbol id="icon-ps" viewBox="0 0 24 24">
+        <rect x="1" y="1" width="22" height="22" rx="3" ry="3" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path
+          d="M6.5 16V8h3.4a2.6 2.6 0 010 5.2H8.4V16H6.5zm1.9-6.5v3.1h1.5a1.55 1.55 0 000-3.1H8.4zM14 15.2c.6.5 1.4.8 2.2.8 1.2 0 2-.6 2-1.6 0-.8-.5-1.2-1.8-1.6l-.6-.2c-1.8-.6-2.6-1.4-2.6-2.8 0-1.7 1.4-2.9 3.5-2.9 1 0 1.8.2 2.5.6l-.5 1.6c-.6-.4-1.3-.6-2-.6-1.1 0-1.7.6-1.7 1.4 0 .8.6 1.2 1.9 1.6l.6.2c1.9.6 2.6 1.5 2.6 3 0 1.8-1.4 3-3.7 3-1.1 0-2.1-.3-2.8-.7l.4-1.6z"
+          fill="currentColor" />
+      </symbol>
+      <symbol id="icon-canva" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M12 5.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13z" fill="currentColor" opacity=".3" />
+        <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" fill="currentColor" />
+      </symbol>
+      <symbol id="icon-branding" viewBox="0 0 24 24">
+        <path d="M3 4h12l6 6v10a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2z" fill="none" stroke="currentColor"
+          stroke-width="1.5" />
+        <path d="M15 4v6h6" fill="none" stroke="currentColor" stroke-width="1.5" />
+      </symbol>
+      <symbol id="icon-social" viewBox="0 0 24 24">
+        <circle cx="7.5" cy="7.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <circle cx="16.5" cy="16.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M10.7 10.7l2.6 2.6" stroke="currentColor" stroke-width="1.5" />
+      </symbol>
+      <symbol id="icon-web" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18" stroke="currentColor" stroke-width="1.5" />
+      </symbol>
+      <symbol id="icon-whatsapp" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M16.6 14c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.7-.8.9-.1.1-.3.2-.5.1-.2-.1-.9-.3-1.8-1.1-.7-.6-1.1-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.2.4-.4.1-.1.2-.2.2-.4.1-.1 0-.3-.1-.4-.1-.1-.6-1.5-.8-2-.2-.5-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2 1 2.3c.1.1 1.5.7 3.7 2.6.5.4.9.6 1.2.8.5.2.9.2 1.2.1.4-.1 1.5-.6 1.7-1.2.2-.5.2-1 .1-1.2l-.4-.1z M12 2a10 10 0 100 20 10 10 0 000-20zm0 18.4a8.4 8.4 0 110-16.8 8.4 8.4 0 010 16.8z" />
+      </symbol>
+      <symbol id="icon-instagram" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+      </symbol>
+      <symbol id="icon-linkedin" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M7 10v7M7 7v1M11 17v-5a3 3 0 016 0v5" stroke="currentColor" stroke-width="1.5" />
+      </symbol>
+      <symbol id="icon-behance" viewBox="0 0 24 24">
+        <path
+          d="M4 7h5a3 3 0 110 6H4V7zm0 8h5.5a3 3 0 110 6H4v-6zM17 9.5a3.5 3.5 0 013.5 3.5h-6a3.5 3.5 0 013.5-3.5zM14.5 7H20"
+          stroke="currentColor" stroke-width="1.5" fill="none" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="site-header" role="banner">
+    <nav class="nav">
+        <ul id="nav-links" class="nav-links" role="navigation">
+            <li><a href="#about">Sobre</a></li>
+            <li><a href="#projects">Projetos</a></li>
+            <li><a href="#services">Serviços</a></li>
+            <li><a href="#footer" class="btn btn-primary">Contato</a></li>
+        </ul>
+    </nav>
+  </header>
+
+  <main id="content">
+    <!-- HERO -->
+    <section id="hero" class="section hero" aria-labelledby="hero-title">
+      <div class="hero-bg">
+        <div class="parallax dot-1" data-parallax="-18"></div>
+        <div class="parallax dot-2" data-parallax="-8"></div>
+        <div class="parallax dot-3" data-parallax="14"></div>
+      </div>
+      <div class="hero-inner">
+        <h1 id="hero-title" class="hero-title">Portfólio.</h1>
+        <p class="hero-tagline">Por Rafael Batista de Lima</p>
+        <div class="hero-cta">
+          <a href="#projects" class="btn btn-primary btn-magnetic">Ver projetos</a>
+          <a href="#footer" class="btn btn-ghost btn-magnetic">Fale comigo</a>
+        </div>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">scroll</div>
+    </section>
+
+    <!-- SOBRE MIM -->
+    <section id="about" class="section about" aria-label="Sobre mim">
+      <div class="container">
+        <div class="about-card glass reveal">
+          <div class="avatar-wrap">
+            <img class="avatar" src="https://i.imgur.com/SBDpUYV.png"
+              alt="Foto de perfil de Rafael Batista" loading="lazy">
+          </div>
+          <div class="about-text">
+            <h2 class="section-title">RAFAEL BATISTA DE LIMA</h2>
+            <p>Designer gráfico com experiência na área desde os 12 anos e atuação profissional há quase um ano.
+              Estudante de Licenciatura em Computação, uno pensamento computacional e criatividade para desenvolver
+              projetos visuais de alto impacto, sempre em busca de uma oportunidade de crescimento a longo prazo.</p>
+            <div class="skills">
+              <div class="skill"><svg>
+                  <use href="#icon-ps" />
+                </svg><span>Photoshop</span></div>
+              <div class="skill"><svg>
+                  <use href="#icon-canva" />
+                </svg><span>Canva</span></div>
+            </div>
+            <div class="actions">
+              <a id="resumeLink" class="btn" href="https://drive.usercontent.google.com/u/0/uc?id=1NtEy8sTpUo_M1NREEh6eG1kMFljofi93&export=download" target="_blank" rel="noopener noreferrer">Ver currículo (PDF)</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJETOS CAROUSEL -->
+    <section id="projects" class="section projects" aria-label="Projetos">
+      <div class="container-project">
+        <h2 class="section-title text-center">Principais Projetos</h2>
+        <div class="swiper">
+          <div class="swiper-wrapper">
+            <!-- Slides -->
+            <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Logo & Papel Timbrado KZY"
+                 data-desc="Criação de identidade visual para a KZY E-commerce."
+                 data-tags='["Photoshop"]'
+                 data-images='["https://i.imgur.com/2V8tYeo.png", "https://i.imgur.com/DaCsCbf.png"]'
+                 aria-label="Ver detalhes do projeto Logo & Papel Timbrado KZY">
+                <div class="project-media">
+                  <img alt="Logo e papel timbrado para KZY E-commerce" src="https://i.imgur.com/2V8tYeo.png" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Logo & Papel Timbrado KZY</h3>
+                  <p>Criação de identidade visual para a KZY E-commerce.</p>
+                  <ul class="tags">
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+             <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Logo & Papel Timbrado Esotico"
+                 data-desc="Desenvolvimento de marca para a Esotico Comercio LTDA."
+                 data-tags='["Photoshop"]'
+                 data-images='["https://i.imgur.com/8V7RY46.png", "https://i.imgur.com/w9ghziN.png"]'
+                 aria-label="Ver detalhes do projeto Logo & Papel Timbrado Esotico">
+                <div class="project-media">
+                  <img alt="Logo e papel timbrado para Esotico Comercio LTDA" src="https://i.imgur.com/8V7RY46.png" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Logo & Papel Timbrado Esotico</h3>
+                  <p>Desenvolvimento de marca para a Esotico Comercio LTDA.</p>
+                  <ul class="tags">
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Anúncios para E-commerce"
+                 data-desc="Imagens publicitárias para produtos de loja online, focando em conversão e apelo visual."
+                 data-tags='["Photoshop"]'
+                 data-images='["https://i.imgur.com/7xvJd4E.jpeg", "https://i.imgur.com/gKIKd3l.jpeg", "https://i.imgur.com/svVahmP.jpeg", "https://i.imgur.com/IzShIso.jpeg", "https://i.imgur.com/xiRplCf.jpeg"]'
+                 aria-label="Ver detalhes do projeto Anúncios para E-commerce">
+                <div class="project-media">
+                  <img alt="Imagens publicitárias para produtos de sex shop"
+                    src="https://i.imgur.com/gKIKd3l.jpeg" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Anúncios para E-commerce</h3>
+                  <p>Imagens publicitárias para produtos de loja online.</p>
+                  <ul class="tags">
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+             <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Postagens para Mídias Sociais"
+                 data-desc="Criação de artes para anúncios e posts sazonais em redes sociais."
+                 data-tags='["Canva", "Photoshop"]'
+                 data-images='["https://i.imgur.com/m153a7k.jpeg", "https://i.imgur.com/ZNljAZZ.jpeg", "https://i.imgur.com/1vxY31N.jpeg", "https://i.imgur.com/vfmhVTA.jpeg", "https://i.imgur.com/AVF92sM.jpeg", "https://i.imgur.com/dEQCMgW.jpeg", "https://i.imgur.com/4Q6Mlk6.jpeg", "https://i.imgur.com/aNpPDu4.jpeg", "https://i.imgur.com/n9vRwiE.jpeg", "https://i.imgur.com/2550oSt.jpeg", "https://i.imgur.com/zjlVsef.jpeg", "https://i.imgur.com/0GCBt0J.jpeg"]'
+                 aria-label="Ver detalhes do projeto Postagens para Mídias Sociais">
+                <div class="project-media">
+                  <img alt="Artes para posts de mídias sociais"
+                    src="https://i.imgur.com/m153a7k.jpeg" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Postagens para Mídias Sociais</h3>
+                  <p>Criação de artes para anúncios e posts sazonais.</p>
+                  <ul class="tags">
+                    <li>Canva</li>
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Criativos Patrocinados"
+                 data-desc="Criação de criativos para campanhas de tráfego pago, focando em conversão e apelo visual."
+                 data-tags='["Canva", "Photoshop"]'
+                 data-images='["https://i.imgur.com/oHN6xPf.jpeg", "https://i.imgur.com/o1lg9Qi.jpeg", "https://i.imgur.com/oJxGu2b.jpeg", "https://i.imgur.com/VhPgt6s.jpeg", "https://i.imgur.com/1EfY4At.jpeg"]'
+                 aria-label="Ver detalhes do projeto Criativos Patrocinados">
+                <div class="project-media">
+                  <img alt="Criativos para campanhas de tráfego pago"
+                    src="https://i.imgur.com/oJxGu2b.jpeg" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Criativos Patrocinados</h3>
+                  <p>Criativos para campanhas de tráfego pago.</p>
+                  <ul class="tags">
+                    <li>Canva</li>
+                     <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="javascript:void(0);" class="project-card"
+                 data-title="Encartes Sazonais"
+                 data-desc="Elaboração de temas e design para encartes promocionais de varejo, alinhados com datas comemorativas."
+                 data-tags='["Photoshop"]'
+                 data-images='["https://i.imgur.com/DusLEDL.jpeg", "https://i.imgur.com/GCkpKAF.jpeg", "https://i.imgur.com/A6uQjHT.jpeg", "https://i.imgur.com/0JNtUMH.jpeg", "https://i.imgur.com/jvre97o.jpeg", "https://i.imgur.com/vBLxVS4.jpeg", "https://i.imgur.com/SWpKxok.jpeg", "https://i.imgur.com/gqg1yJT.jpeg", "https://i.imgur.com/Q2pZ202.jpeg", "https://i.imgur.com/XkSS73O.jpeg", "https://i.imgur.com/b2Q6o9K.jpeg", "https://i.imgur.com/EjPSWyA.jpeg", "https://i.imgur.com/Yy2R43y.jpeg", "https://i.imgur.com/hfWaDbn.jpeg"]'
+                 aria-label="Ver detalhes do projeto Encartes Sazonais">
+                <div class="project-media">
+                  <img alt="Design de encartes promocionais para varejo"
+                    src="https://i.imgur.com/jvre97o.jpeg" loading="lazy" />
+                </div>
+                <div class="project-info">
+                  <h3>Encartes Sazonais</h3>
+                  <p>Elaboração de temas e design para encartes promocionais.</p>
+                  <ul class="tags">
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+              </a>
+            </div>
+          </div>
+          <!-- Pagination -->
+          <div class="swiper-pagination"></div>
+
+          <!-- Navigation buttons -->
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANTES E DEPOIS -->
+    <section id="before-after-showcase" class="section" aria-label="Exemplo de Antes e Depois">
+      <div class="container" style="max-width: 800px;">
+        <h2 class="section-title text-center" style="margin-bottom: 24px;">Transformação Visual</h2>
+        <div class="before-after reveal">
+          <div class="ba-media">
+            <img class="ba-img ba-before" alt="Antes: Identidade visual antiga"
+              src="https://i.imgur.com/Fxugjne.png" loading="lazy" />
+            <img class="ba-img ba-after" alt="Depois: Nova identidade visual"
+              src="https://i.imgur.com/NwjdQmx.png" loading="lazy" />
+            <input class="ba-slider" type="range" min="0" max="100" value="50" aria-label="Revelar antes/depois">
+          </div>
+          <div class="ba-legend"><span>Antes</span><span>Depois</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVIÇOS -->
+    <section id="services" class="section services" aria-label="Serviços">
+      <div class="container">
+        <h2 class="section-title text-center">Minhas Competências</h2>
+        <div class="services-grid">
+          <div class="service reveal"><svg aria-hidden="true">
+              <use href="#icon-branding" />
+            </svg>
+            <h3>Identidade Visual</h3>
+            <p>Criação de logos, paletas de cores e elementos que definem uma marca forte e coesa.</p>
+          </div>
+          <div class="service reveal"><svg aria-hidden="true">
+              <use href="#icon-social" />
+            </svg>
+            <h3>Artes para Social Media</h3>
+            <p>Posts, stories e templates criativos para engajar seu público e aumentar o alcance.</p>
+          </div>
+          <div class="service reveal"><svg aria-hidden="true">
+              <use href="#icon-web" />
+            </svg>
+            <h3>Landing Pages</h3>
+            <p>Criação de páginas de destino simples e eficientes para campanhas ou produtos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="footer" class="section footer-new">
+      <div class="container">
+        <div class="footer-content">
+          <h2 class="section-title">Vamos criar algo juntos?</h2>
+          <p>Se você tem um projeto em mente, uma pergunta ou apenas quer dizer oi, meu inbox está sempre aberto.</p>
+          <a href="https://wa.me/5543999058527?text=Ol%C3%A1!%20Vi%20seu%20portf%C3%B3lio%20e%20gostaria%20de%20conversar%20sobre%20um%20projeto."
+            target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-magnetic">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;" aria-hidden="true">
+              <use href="#icon-whatsapp" />
+            </svg>
+            Conversar no WhatsApp
+          </a>
+        </div>
+      </div>
+      <div class="signature">
+        <span>Todos os direitos reservados © 2026</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Modal para Projetos -->
+  <div id="projectModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none;">
+    <div class="modal-inner">
+      <button id="closeModalBtn" aria-label="Fechar modal">&times;</button>
+      <h2 id="modalTitle" style="margin-bottom:12px;"></h2>
+      <div class="modal-gallery">
+          <img id="modalMainImage" src="" alt="Imagem principal do projeto" class="modal-main-image">
+      </div>
+      <div id="modalThumbnails" class="modal-thumbnails"></div>
+      <p id="modalDesc"></p>
+      <ul id="modalTags" class="tags"></ul>
+    </div>
+  </div>
+
+  <!-- Swiper.js JS from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <!-- JavaScript Customizado -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
+
