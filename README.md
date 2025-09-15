@@ -15,8 +15,6 @@ portfolio-rafael/
 │   │   └── main.js         # JavaScript principal
 │   ├── images/             # Imagens do projeto
 │   └── fonts/              # Fontes customizadas (se necessário)
-├── docs/
-│   └── deployment.md       # Guia de hospedagem
 └── README.md               # Este arquivo
 ```
 
