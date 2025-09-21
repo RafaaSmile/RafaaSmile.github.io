@@ -35,22 +35,14 @@
             color: #4f46e5;
             background-color: #eef2ff;
         }
-        @media print {
-            body { background-color: white; }
-            .no-print { display: none; }
-            #print-section, #print-section * { visibility: visible; }
-            #print-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 20px;
-            }
-            .card {
-                 box-shadow: none;
-                 border: 1px solid #ccc;
-                 page-break-inside: avoid;
-            }
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type='number'] {
+            -moz-appearance: textfield;
+            text-align: center;
         }
     </style>
 </head>
@@ -59,10 +51,10 @@
         <!-- Cabeçalho -->
         <header class="mb-8 no-print">
             <h1 class="text-3xl font-bold text-slate-800">
-                <i class="fas fa-clipboard-list text-indigo-600"></i>
-                Análise de Sugestão de Pedidos
+                <i class="fas fa-tasks text-indigo-600"></i>
+                Gestor de Sugestão de Pedidos
             </h1>
-            <p class="text-slate-500 mt-1">Importe seu arquivo CSV para visualizar e gerenciar os produtos com sugestão de compra.</p>
+            <p class="text-slate-500 mt-1">Importe, edite e exporte sua lista de pedidos de forma eficiente.</p>
         </header>
 
         <!-- Área de Upload -->
@@ -103,16 +95,13 @@
             </div>
 
             <!-- Lista de Produtos -->
-            <div id="print-section">
-                 <h2 id="print-title" class="text-2xl font-bold text-slate-800 mb-4 hidden print:block"></h2>
-                 <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </div>
+            <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
             <!-- Mensagem de "Nenhum resultado" -->
             <div id="no-results" class="hidden text-center py-12">
                  <i class="fas fa-box-open text-6xl text-slate-300"></i>
-                 <p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto encontrado</p>
-                 <p class="text-slate-500">A sua busca não retornou resultados.</p>
+                 <p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto para exibir</p>
+                 <p class="text-slate-500">Não há itens nesta categoria ou a busca não retornou resultados.</p>
             </div>
         </div>
 
@@ -132,135 +121,94 @@
     </div>
 
     <script>
-        // Inicializa a biblioteca jsPDF
         window.jsPDF = window.jspdf.jsPDF;
+        const csvFileInput = document.getElementById('csvFile'), uploadContainer = document.getElementById('upload-container'), dragArea = document.querySelector('.drag-area'), resultsContainer = document.getElementById('results-container'), productList = document.getElementById('productList'), initialState = document.getElementById('initial-state'), placeholder = document.getElementById('placeholder'), loading = document.getElementById('loading'), summary = document.getElementById('summary'), searchInput = document.getElementById('searchInput'), pdfButton = document.getElementById('pdfButton'), noResults = document.getElementById('no-results'), tabButtons = document.querySelectorAll('.tab-button');
+        
+        let allProducts = [], currentTab = 'to_order';
 
-        // Elementos da DOM
-        const csvFileInput = document.getElementById('csvFile');
-        const uploadContainer = document.getElementById('upload-container');
-        const dragArea = document.querySelector('.drag-area');
-        const resultsContainer = document.getElementById('results-container');
-        const productList = document.getElementById('productList');
-        const initialState = document.getElementById('initial-state');
-        const placeholder = document.getElementById('placeholder');
-        const loading = document.getElementById('loading');
-        const summary = document.getElementById('summary');
-        const searchInput = document.getElementById('searchInput');
-        const pdfButton = document.getElementById('pdfButton');
-        const noResults = document.getElementById('no-results');
-        const printTitle = document.getElementById('print-title');
-        const tabButtons = document.querySelectorAll('.tab-button');
-
-        // Estado da aplicação
-        let allSuggestedProducts = [];
-        let currentTab = 'to_order';
-
-        // --- Lógica de Upload ---
         dragArea.addEventListener('click', () => csvFileInput.click());
         csvFileInput.addEventListener('change', e => e.target.files[0] && processFile(e.target.files[0]));
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dragArea.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dragArea.addEventListener(eventName, () => dragArea.classList.add('active'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dragArea.addEventListener(eventName, () => dragArea.classList.remove('active'), false);
-        });
-
-        dragArea.addEventListener('drop', e => {
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'text/csv') processFile(file);
-            else alert('Por favor, solte um arquivo do tipo CSV.');
-        }, false);
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => dragArea.addEventListener(eName, e => {e.preventDefault(); e.stopPropagation();}, false));
+        ['dragenter', 'dragover'].forEach(eName => dragArea.addEventListener(eName, () => dragArea.classList.add('active'), false));
+        ['dragleave', 'drop'].forEach(eName => dragArea.addEventListener(eName, () => dragArea.classList.remove('active'), false));
+        dragArea.addEventListener('drop', e => { const file = e.dataTransfer.files[0]; if (file && file.type === 'text/csv') processFile(file); else alert('Por favor, solte um arquivo do tipo CSV.'); }, false);
 
         function processFile(file) {
             initialState.classList.remove('hidden');
             placeholder.classList.add('hidden');
             loading.classList.remove('hidden');
             resultsContainer.classList.add('hidden');
-
             const reader = new FileReader();
-            reader.onload = e => {
-                setTimeout(() => {
-                    parseCSV(e.target.result);
-                    loading.classList.add('hidden');
-                    placeholder.classList.remove('hidden');
-                }, 500);
-            };
+            reader.onload = e => setTimeout(() => { parseCSV(e.target.result); loading.classList.add('hidden'); placeholder.classList.remove('hidden'); }, 500);
             reader.readAsText(file, 'ISO-8859-1');
         }
 
         function parseCSV(csvText) {
-            const lines = csvText.split(/\r\n|\n/);
-            allSuggestedProducts = [];
-            
-            lines.forEach(line => {
+            allProducts = [];
+            csvText.split(/\r\n|\n/).forEach(line => {
                 if (!/^\d/.test(line.trim())) return;
                 const columns = line.split(';');
                 if (columns.length < 9) return;
                 
-                const sugestao = parseInt(columns[8].trim(), 10);
-                if (!isNaN(sugestao) && sugestao > 0) {
-                    allSuggestedProducts.push({
+                const estoqueNum = parseInt(columns[4].trim(), 10);
+                const sugestaoNum = parseInt(columns[8].trim(), 10);
+
+                if ((!isNaN(sugestaoNum) && sugestaoNum > 0) || (!isNaN(estoqueNum) && estoqueNum < 0)) {
+                    allProducts.push({
                         codigo: columns[0]?.trim() || 'N/A',
                         descricao: columns[1]?.trim() || 'N/A',
-                        estoqueAtual: columns[4]?.trim() || '0',
+                        estoqueAtual: estoqueNum,
                         vendaPeriodo: columns[7]?.trim() || '0',
-                        sugestao,
-                        status: 'to_order' // Status inicial
+                        sugestao: sugestaoNum || 0,
+                        pedidoManual: (sugestaoNum > 0) ? sugestaoNum : 0,
+                        status: 'to_order'
                     });
                 }
             });
             updateView();
         }
         
-        // --- Renderização e UI ---
         function updateView() {
             const searchTerm = searchInput.value.toLowerCase();
-            
-            const filteredProducts = allSuggestedProducts.filter(p => 
-                p.status === currentTab &&
-                (p.descricao.toLowerCase().includes(searchTerm) || p.codigo.includes(searchTerm))
-            );
-
+            const filteredProducts = allProducts.filter(p => p.status === currentTab && (p.descricao.toLowerCase().includes(searchTerm) || p.codigo.includes(searchTerm)));
             renderProductList(filteredProducts);
             updateSummary();
-            
-            uploadContainer.classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
-            initialState.classList.add('hidden');
+            if (allProducts.length > 0) {
+                uploadContainer.classList.add('hidden');
+                resultsContainer.classList.remove('hidden');
+                initialState.classList.add('hidden');
+            }
         }
         
         function renderProductList(products) {
             productList.innerHTML = '';
-            
             noResults.classList.toggle('hidden', products.length > 0);
 
-            if (allSuggestedProducts.length === 0 && currentTab === 'to_order') {
+            if (allProducts.length === 0) {
                 resultsContainer.classList.add('hidden');
                 initialState.classList.remove('hidden');
-                placeholder.innerHTML = `
-                    <i class="fas fa-info-circle text-6xl text-slate-300"></i>
-                    <p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto encontrado</p>
-                    <p class="text-slate-500">O arquivo processado não contém produtos com sugestão de pedido.</p>
-                `;
+                placeholder.innerHTML = `<i class="fas fa-info-circle text-6xl text-slate-300"></i><p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto para ação</p><p class="text-slate-500">O arquivo não contém produtos com sugestão de pedido ou estoque negativo.</p>`;
             }
 
             products.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'card bg-white p-5 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between';
+                
+                const estoqueClass = p.estoqueAtual < 0 ? 'text-red-600 font-bold' : '';
+                const estoqueIcon = p.estoqueAtual < 0 ? `<i class="fas fa-exclamation-triangle text-red-500 mr-1" title="Estoque Negativo"></i>` : '';
 
                 let actionButtons = '';
+                let pedidoSection = '';
+
                 if (currentTab === 'to_order') {
+                    pedidoSection = `
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Qtd. Pedido:</label>
+                            <input type="number" value="${p.pedidoManual}" oninput="updateManualOrder(event, '${p.codigo}')" class="w-full text-center border rounded-md p-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-lg text-indigo-700">
+                        </div>
+                    `;
                     actionButtons = `
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+                        <div class="mt-4 flex gap-2">
                             <button onclick="updateProductStatus('${p.codigo}', 'ordered')" class="w-full bg-green-100 text-green-700 hover:bg-green-200 text-sm font-semibold py-2 px-3 rounded-md transition flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i>Pedido</button>
                             <button onclick="updateProductStatus('${p.codigo}', 'ignored')" class="w-full bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold py-2 px-3 rounded-md transition flex items-center justify-center gap-2"><i class="fas fa-times-circle"></i>Ignorar</button>
                         </div>
@@ -279,14 +227,15 @@
                             <span class="text-xs font-semibold bg-slate-100 text-slate-600 py-1 px-2 rounded-full">CÓD: ${p.codigo}</span>
                             <div class="text-right">
                                 <p class="text-sm text-slate-500">Sugerido</p>
-                                <p class="text-3xl font-bold text-red-500">${p.sugestao}</p>
+                                <p class="text-3xl font-bold text-orange-500">${p.sugestao}</p>
                             </div>
                         </div>
                         <h3 class="font-semibold text-slate-800 mt-3 h-12">${p.descricao}</h3>
                         <div class="mt-4 pt-4 border-t border-slate-200 flex justify-between text-sm">
-                            <div class="text-center"><p class="text-slate-500">Estoque</p><p class="font-medium">${p.estoqueAtual}</p></div>
+                            <div class="text-center"><p class="text-slate-500">Estoque</p><p class="font-medium ${estoqueClass}">${estoqueIcon}${p.estoqueAtual}</p></div>
                             <div class="text-center"><p class="text-slate-500">Venda</p><p class="font-medium">${p.vendaPeriodo}</p></div>
                         </div>
+                        ${pedidoSection}
                     </div>
                     ${actionButtons}
                 `;
@@ -295,20 +244,31 @@
         }
         
         function updateSummary() {
-            const toOrder = allSuggestedProducts.filter(p => p.status === 'to_order');
-            const ordered = allSuggestedProducts.filter(p => p.status === 'ordered');
-            const ignored = allSuggestedProducts.filter(p => p.status === 'ignored');
+            const toOrder = allProducts.filter(p => p.status === 'to_order');
+            const ordered = allProducts.filter(p => p.status === 'ordered');
+            const ignored = allProducts.filter(p => p.status === 'ignored');
+            const totalItemsToOrder = toOrder.reduce((sum, p) => sum + p.pedidoManual, 0);
 
             summary.innerHTML = `
-                <div class="text-center"><p class="text-xs text-slate-500">A Pedir</p><p class="text-lg font-bold text-indigo-600">${toOrder.length}</p></div>
+                <div class="text-center"><p class="text-xs text-slate-500">A Pedir</p><p class="text-lg font-bold text-indigo-600">${toOrder.length} (${totalItemsToOrder} un)</p></div>
                 <div class="text-center"><p class="text-xs text-slate-500">Pedidos</p><p class="text-lg font-bold text-green-600">${ordered.length}</p></div>
                 <div class="text-center"><p class="text-xs text-slate-500">Ignorados</p><p class="text-lg font-bold text-red-600">${ignored.length}</p></div>
             `;
         }
 
-        // --- Ações e Eventos ---
+        function updateManualOrder(event, codigo) {
+            const product = allProducts.find(p => p.codigo === codigo);
+            if (product) {
+                let value = parseInt(event.target.value, 10);
+                if(isNaN(value) || value < 0) value = 0;
+                product.pedidoManual = value;
+                event.target.value = value; // Garante que o valor no input seja atualizado se for corrigido
+                updateSummary();
+            }
+        }
+
         function updateProductStatus(codigo, newStatus) {
-            const product = allSuggestedProducts.find(p => p.codigo === codigo);
+            const product = allProducts.find(p => p.codigo === codigo);
             if (product) {
                 product.status = newStatus;
                 updateView();
@@ -329,40 +289,27 @@
         function exportPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const toOrderProducts = allSuggestedProducts.filter(p => p.status === 'to_order');
+            const toOrderProducts = allProducts.filter(p => p.status === 'to_order' && p.pedidoManual > 0);
 
             if (toOrderProducts.length === 0) {
-                alert("Não há produtos na lista 'A Pedir' para exportar.");
+                alert("Não há produtos na lista 'A Pedir' com quantidade maior que zero para exportar.");
                 return;
             }
-
             doc.setFontSize(18);
             doc.text("Lista de Sugestão de Pedido", 14, 22);
             doc.setFontSize(11);
             doc.setTextColor(100);
             doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
-
-            const tableColumn = ["Código", "Descrição", "Sugestão"];
-            const tableRows = [];
-
-            toOrderProducts.forEach(product => {
-                const productData = [
-                    product.codigo,
-                    product.descricao,
-                    product.sugestao,
-                ];
-                tableRows.push(productData);
-            });
-
+            
             doc.autoTable({
-                head: [tableColumn],
-                body: tableRows,
+                head: [['Código', 'Descrição', 'Pedido']],
+                body: toOrderProducts.map(p => [p.codigo, p.descricao, p.pedidoManual]),
                 startY: 35,
                 theme: 'grid',
-                headStyles: { fillColor: [79, 70, 229] } // Cor índigo
+                headStyles: { fillColor: [79, 70, 229] }
             });
             
-            const totalItems = toOrderProducts.reduce((sum, p) => sum + p.sugestao, 0);
+            const totalItems = toOrderProducts.reduce((sum, p) => sum + p.pedidoManual, 0);
             const finalY = doc.lastAutoTable.finalY || 50;
             doc.setFontSize(12);
             doc.text(`Total de Produtos: ${toOrderProducts.length}`, 14, finalY + 10);
@@ -373,11 +320,9 @@
         
         pdfButton.addEventListener('click', exportPDF);
 
-        // Estilo para as abas
         tabButtons.forEach(button => {
             button.classList.add('py-3', 'px-4', 'font-semibold', 'text-sm', 'text-slate-500', 'border-b-2', 'border-transparent', 'hover:text-indigo-600', 'transition');
         });
-
     </script>
 </body>
 </html>
