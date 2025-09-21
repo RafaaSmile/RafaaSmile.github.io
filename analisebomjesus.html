@@ -1,330 +1,312 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise de Sugestão de Pedidos</title>
+    <title>Gestor de Pedidos ERP</title>
+    <!-- Tailwind CSS para um design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Bibliotecas para gerar PDF -->
+    <!-- Biblioteca PapaParse para interpretar arquivos CSV de forma robusta -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Bibliotecas jsPDF e jsPDF-AutoTable para gerar o PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <!-- Ícones da biblioteca Lucide -->
+    <script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     <style>
+        /* Estilos personalizados para a aplicação */
+        body { font-family: 'Inter', sans-serif; }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+        .tab-active { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
+        .table-header-sortable { cursor: pointer; }
+        .table-header-sortable:hover { background-color: #f0f4f8; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Transições suaves */
+        .transition-all { transition: all 0.3s ease-in-out; }
+        /* Estilo para feedback de drag-and-drop */
+        .dragging-over {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #eff6ff; /* blue-50 */
         }
-        .drag-area {
-            border: 2px dashed #cbd5e1;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .drag-area.active {
-            background-color: #e0e7ff;
-            border-color: #4f46e5;
-        }
-        .card {
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .tab-button.active {
-            border-color: #4f46e5;
-            color: #4f46e5;
-            background-color: #eef2ff;
-        }
-        input[type='number']::-webkit-inner-spin-button,
-        input[type='number']::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type='number'] {
-            -moz-appearance: textfield;
-            text-align: center;
+
+        /* Estilos para a tabela responsiva (layout de cartão em ecrãs pequenos) */
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none; /* Esconde o cabeçalho tradicional */
+            }
+            .responsive-table, .responsive-table tbody, .responsive-table tr {
+                display: block;
+            }
+            .responsive-table tr {
+                border: 1px solid #e5e7eb; /* gray-200 */
+                border-radius: 0.75rem; /* rounded-xl */
+                margin-bottom: 1rem;
+                padding: 1rem;
+                background-color: #ffffff;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 0.25rem;
+                border-bottom: 1px solid #f3f4f6; /* gray-100 */
+                font-size: 14px;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #4b5563; /* gray-600 */
+            }
+            .responsive-table .action-buttons {
+                justify-content: flex-end;
+                gap: 1.5rem; /* Aumenta o espaçamento para facilitar o toque */
+            }
         }
     </style>
 </head>
-<body class="p-4 sm:p-6 md:p-8">
-    <div class="max-w-7xl mx-auto">
-        <!-- Cabeçalho -->
-        <header class="mb-8 no-print">
-            <h1 class="text-3xl font-bold text-slate-800">
-                <i class="fas fa-tasks text-indigo-600"></i>
-                Gestor de Sugestão de Pedidos
-            </h1>
-            <p class="text-slate-500 mt-1">Importe, edite e exporte sua lista de pedidos de forma eficiente.</p>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+        <!-- Cabeçalho Principal -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg"><i data-lucide="bar-chart-big" class="h-8 w-8 text-white"></i></div>
+                <div><h1 class="text-3xl font-bold text-gray-900">Gestor de Pedidos</h1><p class="text-gray-500 mt-1">Análise inteligente de sugestão de pedidos.</p></div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="history-btn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><i data-lucide="history"></i> Histórico</button>
+                <button id="new-analysis-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"><i data-lucide="file-up"></i> Nova Análise</button>
+                <input id="file-upload" type="file" class="hidden" accept=".csv">
+            </div>
         </header>
 
-        <!-- Área de Upload -->
-        <div id="upload-container" class="mb-8 no-print">
-            <label for="csvFile" class="drag-area w-full p-10 text-center bg-white rounded-lg cursor-pointer block">
-                <div class="flex flex-col items-center justify-center">
-                    <i class="fas fa-cloud-upload-alt text-5xl text-slate-400 mb-4"></i>
-                    <p class="text-lg font-semibold text-slate-700">Arraste e solte o arquivo CSV aqui</p>
-                    <p class="text-slate-500">ou</p>
-                    <p class="mt-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition">
-                        Selecione um arquivo
-                    </p>
+        <!-- Seção de Upload -->
+        <div id="upload-section" class="text-center py-20 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer transition-all">
+            <i data-lucide="upload-cloud" class="mx-auto h-12 w-12 text-gray-400"></i>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">Arraste e solte o seu ficheiro .CSV aqui</h3>
+            <p class="mt-2 text-sm text-gray-500">ou clique para selecionar</p>
+        </div>
+
+        <!-- Conteúdo Principal da Análise -->
+        <main id="main-content" class="hidden">
+            <div id="report-info" class="mb-6 p-5 bg-white border border-gray-200 rounded-xl shadow-sm"></div>
+            <div id="summary-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6"></div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                <div class="border-b border-gray-200 w-full md:w-auto">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="toOrder">A Pedir (<span id="toOrder-count">0</span>)</button>
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ordered">Pedidos (<span id="ordered-count">0</span>)</button>
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ignored">Ignorados (<span id="ignored-count">0</span>)</button>
+                    </nav>
                 </div>
-            </label>
-            <input type="file" id="csvFile" accept=".csv" class="hidden">
-        </div>
-        
-        <!-- Container de Resultados -->
-        <div id="results-container" class="hidden">
-            <!-- Barra de Ferramentas e Resumo -->
-            <div class="no-print flex flex-col md:flex-row justify-between items-center mb-6 gap-4 p-4 bg-white rounded-lg shadow-sm">
-                <div class="relative w-full md:w-1/3">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="searchInput" placeholder="Filtrar por nome ou código..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2">
+                    <div class="relative w-full sm:w-64"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></i><input type="text" id="search-input" placeholder="Pesquisar por descrição..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></div>
+                    <button id="export-pdf-btn" class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"><i data-lucide="file-down"></i> Exportar PDF</button>
                 </div>
-                <div id="summary" class="flex items-center gap-4 text-center"></div>
-                <button id="pdfButton" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 transition flex items-center gap-2">
-                    <i class="fas fa-file-pdf"></i>
-                    Exportar PDF
-                </button>
             </div>
 
-            <!-- Abas de Navegação -->
-            <div class="mb-6 flex items-center border-b border-slate-200 no-print">
-                <button class="tab-button active" onclick="changeTab('to_order')">A Pedir</button>
-                <button class="tab-button" onclick="changeTab('ordered')">Pedidos</button>
-                <button class="tab-button" onclick="changeTab('ignored')">Ignorados</button>
+            <!-- Tabelas de Dados -->
+            <div id="tables-container" class="bg-white shadow-md rounded-lg overflow-hidden md:overflow-hidden">
+                <div class="overflow-x-auto">
+                    <div id="toOrder-content" class="tab-content"></div>
+                    <div id="ordered-content" class="tab-content hidden"></div>
+                    <div id="ignored-content" class="tab-content hidden"></div>
+                </div>
             </div>
+            
+            <!-- Controles de Paginação -->
+            <div id="pagination-controls" class="flex flex-col md:flex-row justify-between items-center mt-6 gap-4"></div>
 
-            <!-- Lista de Produtos -->
-            <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
-            <!-- Mensagem de "Nenhum resultado" -->
-            <div id="no-results" class="hidden text-center py-12">
-                 <i class="fas fa-box-open text-6xl text-slate-300"></i>
-                 <p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto para exibir</p>
-                 <p class="text-slate-500">Não há itens nesta categoria ou a busca não retornou resultados.</p>
-            </div>
-        </div>
-
-        <!-- Estado Inicial / Carregando -->
-        <div id="initial-state" class="text-center py-20 bg-white rounded-lg shadow-sm">
-            <div id="placeholder">
-                <i class="fas fa-file-import text-6xl text-slate-300"></i>
-                <p class="mt-4 text-xl font-semibold text-slate-600">Aguardando arquivo</p>
-                <p class="text-slate-500">Selecione um arquivo CSV para começar a análise.</p>
-            </div>
-            <div id="loading" class="hidden">
-                <i class="fas fa-spinner fa-spin text-6xl text-indigo-600"></i>
-                <p class="mt-4 text-xl font-semibold text-slate-600">Processando arquivo...</p>
-                <p class="text-slate-500">Isso pode levar alguns segundos.</p>
-            </div>
-        </div>
+            <div id="loader" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl"><div class="loader"></div><p class="mt-4 text-lg font-semibold text-gray-700">A processar o ficheiro...</p></div></div>
+            <footer class="text-center mt-12 text-gray-400 text-sm"><p>&copy; 2024 Gestor de Pedidos. Todos os direitos reservados.</p></footer>
+        </main>
     </div>
 
+    <!-- Modals -->
+    <div id="history-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-semibold">Histórico de Análises</h3><button id="close-history-modal" class="text-gray-500 hover:text-gray-800"><i data-lucide="x"></i></button></div><div id="history-list" class="p-6 max-h-96 overflow-y-auto"></div></div></div>
+    <div id="error-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900" id="error-title">Erro</h3><div class="mt-2"><p class="text-sm text-gray-500" id="error-message"></p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="close-error-modal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Percebi</button></div></div></div>
+    
     <script>
-        window.jsPDF = window.jspdf.jsPDF;
-        const csvFileInput = document.getElementById('csvFile'), uploadContainer = document.getElementById('upload-container'), dragArea = document.querySelector('.drag-area'), resultsContainer = document.getElementById('results-container'), productList = document.getElementById('productList'), initialState = document.getElementById('initial-state'), placeholder = document.getElementById('placeholder'), loading = document.getElementById('loading'), summary = document.getElementById('summary'), searchInput = document.getElementById('searchInput'), pdfButton = document.getElementById('pdfButton'), noResults = document.getElementById('no-results'), tabButtons = document.querySelectorAll('.tab-button');
-        
-        let allProducts = [], currentTab = 'to_order';
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
 
-        dragArea.addEventListener('click', () => csvFileInput.click());
-        csvFileInput.addEventListener('change', e => e.target.files[0] && processFile(e.target.files[0]));
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => dragArea.addEventListener(eName, e => {e.preventDefault(); e.stopPropagation();}, false));
-        ['dragenter', 'dragover'].forEach(eName => dragArea.addEventListener(eName, () => dragArea.classList.add('active'), false));
-        ['dragleave', 'drop'].forEach(eName => dragArea.addEventListener(eName, () => dragArea.classList.remove('active'), false));
-        dragArea.addEventListener('drop', e => { const file = e.dataTransfer.files[0]; if (file && file.type === 'text/csv') processFile(file); else alert('Por favor, solte um arquivo do tipo CSV.'); }, false);
+            const app = { 
+                uploadSection: document.getElementById('upload-section'), mainContent: document.getElementById('main-content'), 
+                reportInfo: document.getElementById('report-info'), searchInput: document.getElementById('search-input'), 
+                tabsContainer: document.querySelector('nav'), tablesContainer: document.getElementById('tables-container'), 
+                exportPdfBtn: document.getElementById('export-pdf-btn'), historyBtn: document.getElementById('history-btn'), 
+                historyModal: document.getElementById('history-modal'), closeHistoryModalBtn: document.getElementById('close-history-modal'), 
+                historyList: document.getElementById('history-list'), loader: document.getElementById('loader'), 
+                errorModal: document.getElementById('error-modal'), errorTitle: document.getElementById('error-title'), 
+                errorMessage: document.getElementById('error-message'), closeErrorModalBtn: document.getElementById('close-error-modal'), 
+                summarySection: document.getElementById('summary-section'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
+                fileUpload: document.getElementById('file-upload'), paginationControls: document.getElementById('pagination-controls')
+            };
 
-        function processFile(file) {
-            initialState.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            loading.classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
-            const reader = new FileReader();
-            reader.onload = e => setTimeout(() => { parseCSV(e.target.result); loading.classList.add('hidden'); placeholder.classList.remove('hidden'); }, 500);
-            reader.readAsText(file, 'ISO-8859-1');
-        }
+            let state = { 
+                products: { toOrder: [], ordered: [], ignored: [] }, headerInfo: {}, activeTab: 'toOrder', 
+                searchTerm: '', sortConfig: { key: 'SUGESTAO', direction: 'descending' }, 
+                currentAnalysisId: null, pagination: { currentPage: 1, itemsPerPage: 25 }
+            };
 
-        function parseCSV(csvText) {
-            allProducts = [];
-            csvText.split(/\r\n|\n/).forEach(line => {
-                if (!/^\d/.test(line.trim())) return;
-                const columns = line.split(';');
-                if (columns.length < 9) return;
+            const showError = (title, message) => { app.loader.classList.add('hidden'); app.errorTitle.textContent = title; app.errorMessage.innerHTML = message; app.errorModal.classList.remove('hidden'); lucide.createIcons(); };
+            app.closeErrorModalBtn.addEventListener('click', () => app.errorModal.classList.add('hidden'));
+
+            const safeParseInt = (v, f=0) => { const p=parseInt(String(v).trim(),10); return isNaN(p)?f:p; };
+            const safeParseFloat = (v, f=0.0) => { const p=parseFloat(String(v).trim().replace(',','.')); return isNaN(p)?f:p; };
+
+            const handleFile = file => file && file.type === "text/csv" ? parseCSV(file) : showError('Ficheiro Inválido', 'Por favor, selecione um ficheiro com o formato .csv');
+            const parseCSV = file => { app.loader.classList.remove('hidden'); Papa.parse(file, { skipEmptyLines: true, complete: r => { processData(r.data); app.loader.classList.add('hidden'); }, error: e => { showError('Erro de Leitura', 'Não foi possível interpretar o ficheiro CSV.'); console.error(e); } }); };
+
+            const resetToUploadView = () => {
+                app.mainContent.classList.add('hidden'); app.uploadSection.classList.remove('hidden');
+                state = { products: { toOrder:[],ordered:[],ignored:[]}, headerInfo:{}, activeTab:'toOrder', searchTerm:'', sortConfig:{key:'SUGESTAO',direction:'descending'}, currentAnalysisId:null, pagination:{currentPage:1,itemsPerPage:25}};
+                app.searchInput.value = '';
+            };
+
+            const processData = data => {
+                const findRowContaining=t=>data.find(r=>r.join(';').toUpperCase().includes(t.toUpperCase()));
+                const extractInfo=(r,x)=>(r?(r.join(';').match(x)||[])[1]?.trim():'Não identificado');
+                state.headerInfo={fornecedor:extractInfo(findRowContaining('FORNECEDOR:'),/FORNECEDOR:\s*\d+\s*-\s*(.*?)(?:;|$)/i),periodo:extractInfo(findRowContaining('GIRO/SUGESTAO'),/PERIODO DE\s*(.*?)(?:;;|$)/i)};
+                let h=data.findIndex(r=>r[0]?.trim().toUpperCase()==='CODIGO'); if(h===-1){showError('Formato Inválido','A coluna "CODIGO" não foi encontrada.');return;}
+                const hs=data[h].map(h=>h.trim().toUpperCase()),f=a=>a.map(l=>hs.indexOf(l)).find(i=>i!==-1)??-1;
+                const c={c:f(['CODIGO']),d:f(['DESCRICAO','DESCRIÇÃO']),e:f(['F01','EST','ESTOQUE']),o:f(['C.REAL','CUSTO']),b:f(['CODIGO BARRAS'])};
+                if(c.b!==-1){c.v=c.b+1;c.s=c.b+2;}else{showError('Formato Inválido','"CODIGO BARRAS" é essencial e não foi encontrada.');return;}
+                state.headerInfo.hasCostColumn=c.o!==-1; const m=Object.entries({CODIGO:c.c,DESCRICAO:c.d,ESTOQUE:c.e}).filter(([k,v])=>v===-1).map(([k])=>k); if(m.length>0){showError('Colunas em Falta',`Não encontradas: <strong>${m.join(', ')}</strong>.`);return;}
+                const p=data.slice(h+1).map(r=>{const g=r[c.c]?.trim();if(!g||isNaN(parseInt(g)))return null;return{id:g,CODIGO:g,DESCRICAO:r[c.d]?.trim()||'S/D',ESTOQUE:safeParseInt(r[c.e]),VENDA:safeParseInt(r[c.v]),SUGESTAO:safeParseInt(r[c.s]),C_REAL:state.headerInfo.hasCostColumn?safeParseFloat(r[c.o]):0};}).filter(p=>p&&p.SUGESTAO>0);
+                if(p.length===0){showError('Nenhum Produto Válido','Nenhum produto com sugestão de compra (> 0) foi encontrado.');return;}
+                state.products={toOrder:p,ordered:[],ignored:[]}; state.currentAnalysisId=`analysis_${Date.now()}`; saveState(); render();
+                app.uploadSection.classList.add('hidden'); app.mainContent.classList.remove('hidden');
+            };
+
+            const saveState=()=>{if(!state.currentAnalysisId)return;localStorage.setItem(state.currentAnalysisId,JSON.stringify(state));let i=JSON.parse(localStorage.getItem('analyses_index'))||[];if(!i.some(t=>t.id===state.currentAnalysisId))i.unshift({id:state.currentAnalysisId,date:new Date().toISOString(),fornecedor:state.headerInfo.fornecedor});if(i.length>20){i.slice(20).forEach(t=>localStorage.removeItem(t.id));i=i.slice(0,20);}localStorage.setItem('analyses_index',JSON.stringify(i));};
+            const loadState=id=>{const s=localStorage.getItem(id);if(s){state=JSON.parse(s);render();app.uploadSection.classList.add('hidden');app.mainContent.classList.remove('hidden');return true;}return false;};
+            const moveItem=(id,from,to)=>{const i=state.products[from].findIndex(p=>p.id===id);if(i>-1){const[item]=state.products[from].splice(i,1);state.products[to].unshift(item);saveState();render();}};
+            const updateQuantity=(id,qty)=>{const i=state.products.toOrder.find(p=>p.id===id);if(i){i.SUGESTAO=qty;saveState();renderSummary();}};
+
+            const render=()=>{renderReportInfo();renderSummary();renderTabs();renderTable();updateCounts();lucide.createIcons();};
+            const renderReportInfo=()=>{app.reportInfo.innerHTML=`<h2 class="text-xl font-semibold text-gray-800">Detalhes da Análise</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-sm"><div><strong>Fornecedor:</strong> <span class="text-gray-600">${state.headerInfo.fornecedor}</span></div><div><strong>Período de Análise:</strong> <span class="text-gray-600">${state.headerInfo.periodo}</span></div></div>`;};
+            const renderTabs=()=>{document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');if(b.dataset.tab===state.activeTab)b.classList.add('tab-active');});document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));document.getElementById(`${state.activeTab}-content`).classList.remove('hidden');app.exportPdfBtn.disabled=state.activeTab!=='toOrder'||state.products.toOrder.length===0;};
+            const updateCounts=()=>{document.getElementById('toOrder-count').textContent=state.products.toOrder.length;document.getElementById('ordered-count').textContent=state.products.ordered.length;document.getElementById('ignored-count').textContent=state.products.ignored.length;};
+            const renderSummary=()=>{const p=state.products,h=state.headerInfo.hasCostColumn,c=p.toOrder.reduce((s,i)=>s+(i.SUGESTAO*i.C_REAL),0),d=h?c.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):`<span class="text-lg" title="Coluna C.REAL não encontrada">N/D</span>`;app.summarySection.innerHTML=`<div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="h-6 w-6 text-blue-600"></i></div><div><p class="text-gray-500 text-sm">Itens a Pedir</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.length}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="h-6 w-6 text-green-600"></i></div><div><p class="text-gray-500 text-sm">Total de Unidades</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.reduce((s,i)=>s+i.SUGESTAO,0)}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="h-6 w-6 text-yellow-600"></i></div><div><p class="text-gray-500 text-sm">Custo Estimado</p><p class="text-2xl font-bold text-gray-800">${d}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i></div><div><p class="text-gray-500 text-sm">Itens Ignorados</p><p class="text-2xl font-bold text-gray-800">${p.ignored.length}</p></div></div>`;lucide.createIcons();};
+            
+            const renderTable=()=>{const c=document.getElementById(`${state.activeTab}-content`);let d=[...state.products[state.activeTab]];if(state.searchTerm)d=d.filter(p=>p.DESCRICAO.toLowerCase().includes(state.searchTerm.toLowerCase()));d.sort((a,b)=>{const vA=a[state.sortConfig.key],vB=b[state.sortConfig.key];let c=0;if(typeof vA==='string')c=vA.localeCompare(vB);else c=(vA>vB)?1:((vA<vB)?-1:0);return state.sortConfig.direction==='ascending'?c:-c;});const {currentPage,itemsPerPage}=state.pagination;const tP=itemsPerPage===0?1:Math.ceil(d.length/itemsPerPage);const pD=itemsPerPage===0?d:d.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);if(pD.length===0){c.innerHTML=`<div class="p-8 text-center text-gray-500">Nenhum item encontrado.</div>`;app.paginationControls.innerHTML='';return;}c.innerHTML=createTableHTML(pD);renderPaginationControls(d.length);lucide.createIcons();};
+            
+            const createTableHTML = data => {
+                const headers = { 'CODIGO': 'Cód.', 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'VENDA': 'Venda', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
                 
-                const estoqueNum = parseInt(columns[4].trim(), 10);
-                const sugestaoNum = parseInt(columns[8].trim(), 10);
+                const getSortIcon = key => {
+                    if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`;
+                    return state.sortConfig.direction === 'ascending' 
+                        ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` 
+                        : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`;
+                };
 
-                if ((!isNaN(sugestaoNum) && sugestaoNum > 0) || (!isNaN(estoqueNum) && estoqueNum < 0)) {
-                    allProducts.push({
-                        codigo: columns[0]?.trim() || 'N/A',
-                        descricao: columns[1]?.trim() || 'N/A',
-                        estoqueAtual: estoqueNum,
-                        vendaPeriodo: columns[7]?.trim() || '0',
-                        sugestao: sugestaoNum || 0,
-                        pedidoManual: (sugestaoNum > 0) ? sugestaoNum : 0,
-                        status: 'to_order'
-                    });
-                }
-            });
-            updateView();
-        }
-        
-        function updateView() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filteredProducts = allProducts.filter(p => p.status === currentTab && (p.descricao.toLowerCase().includes(searchTerm) || p.codigo.includes(searchTerm)));
-            renderProductList(filteredProducts);
-            updateSummary();
-            if (allProducts.length > 0) {
-                uploadContainer.classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-                initialState.classList.add('hidden');
-            }
-        }
-        
-        function renderProductList(products) {
-            productList.innerHTML = '';
-            noResults.classList.toggle('hidden', products.length > 0);
+                const headerHTML = Object.entries(headers).map(([key, value]) => {
+                    const isSortable = key !== 'AÇÕES';
+                    return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}>
+                                <div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div>
+                            </th>`;
+                }).join('');
 
-            if (allProducts.length === 0) {
-                resultsContainer.classList.add('hidden');
-                initialState.classList.remove('hidden');
-                placeholder.innerHTML = `<i class="fas fa-info-circle text-6xl text-slate-300"></i><p class="mt-4 text-xl font-semibold text-slate-600">Nenhum produto para ação</p><p class="text-slate-500">O arquivo não contém produtos com sugestão de pedido ou estoque negativo.</p>`;
-            }
+                const rowsHTML = data.map(item => {
+                    let actionsHTML;
+                    if (state.activeTab === 'toOrder') {
+                        actionsHTML = `<div class="action-buttons">
+                                        <button data-action="mark-ordered" data-id="${item.id}" title="Marcar como Pedido" class="text-green-600 hover:text-green-800 transition-colors"><i data-lucide="check-circle-2" class="h-6 w-6"></i></button>
+                                        <button data-action="mark-ignored" data-id="${item.id}" title="Ignorar Item" class="text-red-600 hover:text-red-800 transition-colors"><i data-lucide="x-circle" class="h-6 w-6"></i></button>
+                                    </div>`;
+                    } else {
+                        actionsHTML = `<button data-action="undo" data-id="${item.id}" title="Desfazer" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="undo-2" class="h-6 w-6"></i></button>`;
+                    }
 
-            products.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'card bg-white p-5 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between';
-                
-                const estoqueClass = p.estoqueAtual < 0 ? 'text-red-600 font-bold' : '';
-                const estoqueIcon = p.estoqueAtual < 0 ? `<i class="fas fa-exclamation-triangle text-red-500 mr-1" title="Estoque Negativo"></i>` : '';
+                    const suggestionHTML = state.activeTab === 'toOrder' 
+                        ? `<input type="number" class="w-24 p-1 border rounded-md text-center font-bold text-blue-700 bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500" value="${item.SUGESTAO}" data-id="${item.id}" min="0">` 
+                        : `<span class="font-bold text-gray-800">${item.SUGESTAO}</span>`;
 
-                let actionButtons = '';
-                let pedidoSection = '';
+                    const isNegativeStock = item.ESTOQUE < 0;
+                    const stockWarningIcon = isNegativeStock ? `<i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 inline-block mr-1" title="Estoque negativo!"></i>` : '';
+                    const stockClass = isNegativeStock ? 'font-bold text-red-600' : 'text-gray-500';
+                    const rowClass = isNegativeStock ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50';
 
-                if (currentTab === 'to_order') {
-                    pedidoSection = `
-                        <div class="mt-4 pt-4 border-t border-slate-100">
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Qtd. Pedido:</label>
-                            <input type="number" value="${p.pedidoManual}" oninput="updateManualOrder(event, '${p.codigo}')" class="w-full text-center border rounded-md p-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-lg text-indigo-700">
-                        </div>
-                    `;
-                    actionButtons = `
-                        <div class="mt-4 flex gap-2">
-                            <button onclick="updateProductStatus('${p.codigo}', 'ordered')" class="w-full bg-green-100 text-green-700 hover:bg-green-200 text-sm font-semibold py-2 px-3 rounded-md transition flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i>Pedido</button>
-                            <button onclick="updateProductStatus('${p.codigo}', 'ignored')" class="w-full bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold py-2 px-3 rounded-md transition flex items-center justify-center gap-2"><i class="fas fa-times-circle"></i>Ignorar</button>
-                        </div>
-                    `;
-                } else {
-                     actionButtons = `
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex">
-                           <button onclick="updateProductStatus('${p.codigo}', 'to_order')" class="w-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm font-semibold py-2 px-3 rounded-md transition flex items-center justify-center gap-2"><i class="fas fa-undo"></i>Reconsiderar</button>
-                        </div>
-                    `;
-                }
+                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}">
+                                <td data-label="Cód." class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.CODIGO}</td>
+                                <td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td>
+                                <td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center justify-end md:justify-start ${stockClass}">
+                                        ${stockWarningIcon}
+                                        ${item.ESTOQUE}
+                                    </div>
+                                </td>
+                                <td data-label="Venda" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.VENDA}</td>
+                                <td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td>
+                                <td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td>
+                            </tr>`;
+                }).join('');
 
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <span class="text-xs font-semibold bg-slate-100 text-slate-600 py-1 px-2 rounded-full">CÓD: ${p.codigo}</span>
-                            <div class="text-right">
-                                <p class="text-sm text-slate-500">Sugerido</p>
-                                <p class="text-3xl font-bold text-orange-500">${p.sugestao}</p>
-                            </div>
-                        </div>
-                        <h3 class="font-semibold text-slate-800 mt-3 h-12">${p.descricao}</h3>
-                        <div class="mt-4 pt-4 border-t border-slate-200 flex justify-between text-sm">
-                            <div class="text-center"><p class="text-slate-500">Estoque</p><p class="font-medium ${estoqueClass}">${estoqueIcon}${p.estoqueAtual}</p></div>
-                            <div class="text-center"><p class="text-slate-500">Venda</p><p class="font-medium">${p.vendaPeriodo}</p></div>
-                        </div>
-                        ${pedidoSection}
+                return `<table class="min-w-full responsive-table">
+                            <thead class="bg-gray-50"><tr>${headerHTML}</tr></thead>
+                            <tbody class="bg-white divide-y divide-gray-200">${rowsHTML}</tbody>
+                        </table>`;
+            };
+
+            const renderPaginationControls = totalItems => {
+                const { currentPage, itemsPerPage } = state.pagination;
+                if (itemsPerPage === 0 || totalItems <= itemsPerPage) { app.paginationControls.innerHTML = ''; return; }
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                const prevDisabled = currentPage === 1 ? 'disabled' : '';
+                const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+                app.paginationControls.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <label for="items-per-page" class="text-sm font-medium text-gray-700">Itens por página:</label>
+                        <select id="items-per-page" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                            <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                            <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                            <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                            <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                             <option value="0" ${itemsPerPage === 0 ? 'selected' : ''}>Todos</option>
+                        </select>
                     </div>
-                    ${actionButtons}
-                `;
-                productList.appendChild(card);
-            });
-        }
-        
-        function updateSummary() {
-            const toOrder = allProducts.filter(p => p.status === 'to_order');
-            const ordered = allProducts.filter(p => p.status === 'ordered');
-            const ignored = allProducts.filter(p => p.status === 'ignored');
-            const totalItemsToOrder = toOrder.reduce((sum, p) => sum + p.pedidoManual, 0);
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-700">Página ${currentPage} de ${totalPages}</span>
+                        <div class="inline-flex rounded-md shadow-sm" role="group">
+                            <button id="prev-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${prevDisabled}><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+                            <button id="next-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${nextDisabled}><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            };
 
-            summary.innerHTML = `
-                <div class="text-center"><p class="text-xs text-slate-500">A Pedir</p><p class="text-lg font-bold text-indigo-600">${toOrder.length} (${totalItemsToOrder} un)</p></div>
-                <div class="text-center"><p class="text-xs text-slate-500">Pedidos</p><p class="text-lg font-bold text-green-600">${ordered.length}</p></div>
-                <div class="text-center"><p class="text-xs text-slate-500">Ignorados</p><p class="text-lg font-bold text-red-600">${ignored.length}</p></div>
-            `;
-        }
+            const renderHistory=()=>{const i=JSON.parse(localStorage.getItem('analyses_index'))||[];if(i.length===0){app.historyList.innerHTML=`<p class="text-gray-500 text-center">Nenhuma análise anterior encontrada.</p>`;return;}app.historyList.innerHTML=i.map(t=>`<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-lg hover:bg-gray-100 gap-3"><div><p class="font-semibold text-gray-800">${t.fornecedor}</p><p class="text-sm text-gray-500">${new Date(t.date).toLocaleString('pt-BR')}</p></div><div class="flex items-center gap-2 flex-shrink-0"><button data-action="load-history" data-id="${t.id}" class="bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200 transition-colors">Carregar</button><button data-action="delete-history" data-id="${t.id}" class="bg-red-100 text-red-700 font-semibold py-1 px-3 rounded-md hover:bg-red-200 transition-colors">Excluir</button></div></div>`).join('');};
 
-        function updateManualOrder(event, codigo) {
-            const product = allProducts.find(p => p.codigo === codigo);
-            if (product) {
-                let value = parseInt(event.target.value, 10);
-                if(isNaN(value) || value < 0) value = 0;
-                product.pedidoManual = value;
-                event.target.value = value; // Garante que o valor no input seja atualizado se for corrigido
-                updateSummary();
-            }
-        }
+            // Event Listeners
+            app.newAnalysisBtn.addEventListener('click',()=>{if(!app.mainContent.classList.contains('hidden')){resetToUploadView();}else{app.fileUpload.click();}});
+            app.uploadSection.addEventListener('click',()=>app.fileUpload.click());
+            app.fileUpload.addEventListener('change',e=>{const f=e.target.files[0];if(f)handleFile(f);e.target.value=null;});
+            ['dragenter','dragover','dragleave','drop'].forEach(e=>{app.uploadSection.addEventListener(e,p=>{p.preventDefault();p.stopPropagation();},false);});
+            ['dragenter','dragover'].forEach(e=>{app.uploadSection.addEventListener(e,()=>app.uploadSection.classList.add('dragging-over'),false);});
+            ['dragleave','drop'].forEach(e=>{app.uploadSection.addEventListener(e,()=>app.uploadSection.classList.remove('dragging-over'),false);});
+            app.uploadSection.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)handleFile(f);},false);
+            app.tabsContainer.addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(b){state.activeTab=b.dataset.tab;state.pagination.currentPage=1;render();}});
+            app.searchInput.addEventListener('input',e=>{state.searchTerm=e.target.value;state.pagination.currentPage=1;renderTable();});
+            app.tablesContainer.addEventListener('click',e=>{const t=e.target,b=t.closest('button'),h=t.closest('.table-header-sortable');if(b){const a=b.dataset.action,i=b.dataset.id;if(a==='mark-ordered')moveItem(i,'toOrder','ordered');if(a==='mark-ignored')moveItem(i,'toOrder','ignored');if(a==='undo')moveItem(i,state.activeTab,'toOrder');}else if(h){const k=h.dataset.sortKey,isAsc=state.sortConfig.key===k&&state.sortConfig.direction==='ascending';state.sortConfig={key:k,direction:isAsc?'descending':'ascending'};renderTable();}});
+            app.tablesContainer.addEventListener('change',e=>{if(e.target.type==='number'){const id=e.target.dataset.id,qty=parseInt(e.target.value,10);if(!isNaN(qty))updateQuantity(id,qty);}});
+            app.exportPdfBtn.addEventListener('click',()=>{const{jsPDF}=window.jspdf,d=new jsPDF();d.setFontSize(18);d.text("Sugestão de Pedido",14,22);d.setFontSize(11);d.text(`Fornecedor: ${state.headerInfo.fornecedor}`,14,30);d.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`,14,36);const t=state.products.toOrder.map(p=>[p.CODIGO,p.DESCRICAO,p.ESTOQUE,p.VENDA,p.SUGESTAO]);d.autoTable({startY:45,head:[['Código','Descrição','Estoque','Venda','Qtd. a Pedir']],body:t,theme:'grid',headStyles:{fillColor:[45,55,72]}});d.save(`Pedido_${state.headerInfo.fornecedor.replace(/\s/g,'_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.pdf`);});
+            app.historyBtn.addEventListener('click',()=>{renderHistory();app.historyModal.classList.remove('hidden');});
+            app.closeHistoryModalBtn.addEventListener('click',()=>app.historyModal.classList.add('hidden'));
+            app.historyList.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.action,i=b.dataset.id;if(a==='load-history'&&loadState(i))app.historyModal.classList.add('hidden');if(a==='delete-history'){localStorage.removeItem(i);let x=JSON.parse(localStorage.getItem('analyses_index'))||[];x=x.filter(t=>t.id!==i);localStorage.setItem('analyses_index',JSON.stringify(x));renderHistory();}});
+            app.paginationControls.addEventListener('click', e => {const target = e.target.closest('button'); if (!target) return; if (target.id === 'prev-page') { state.pagination.currentPage--; } if (target.id === 'next-page') { state.pagination.currentPage++; } renderTable();});
+            app.paginationControls.addEventListener('change', e => {if (e.target.id === 'items-per-page') { state.pagination.itemsPerPage = Number(e.target.value); state.pagination.currentPage = 1; renderTable(); }});
 
-        function updateProductStatus(codigo, newStatus) {
-            const product = allProducts.find(p => p.codigo === codigo);
-            if (product) {
-                product.status = newStatus;
-                updateView();
-            }
-        }
-        
-        function changeTab(tabName) {
-            currentTab = tabName;
-            tabButtons.forEach(button => {
-                const buttonText = button.textContent.toLowerCase().replace(' ', '_');
-                button.classList.toggle('active', buttonText === tabName);
-            });
-            updateView();
-        }
-
-        searchInput.addEventListener('input', updateView);
-        
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const toOrderProducts = allProducts.filter(p => p.status === 'to_order' && p.pedidoManual > 0);
-
-            if (toOrderProducts.length === 0) {
-                alert("Não há produtos na lista 'A Pedir' com quantidade maior que zero para exportar.");
-                return;
-            }
-            doc.setFontSize(18);
-            doc.text("Lista de Sugestão de Pedido", 14, 22);
-            doc.setFontSize(11);
-            doc.setTextColor(100);
-            doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
-            
-            doc.autoTable({
-                head: [['Código', 'Descrição', 'Pedido']],
-                body: toOrderProducts.map(p => [p.codigo, p.descricao, p.pedidoManual]),
-                startY: 35,
-                theme: 'grid',
-                headStyles: { fillColor: [79, 70, 229] }
-            });
-            
-            const totalItems = toOrderProducts.reduce((sum, p) => sum + p.pedidoManual, 0);
-            const finalY = doc.lastAutoTable.finalY || 50;
-            doc.setFontSize(12);
-            doc.text(`Total de Produtos: ${toOrderProducts.length}`, 14, finalY + 10);
-            doc.text(`Total de Itens a Pedir: ${totalItems}`, 14, finalY + 16);
-
-            doc.save(`sugestao_pedido_${new Date().toISOString().slice(0,10)}.pdf`);
-        }
-        
-        pdfButton.addEventListener('click', exportPDF);
-
-        tabButtons.forEach(button => {
-            button.classList.add('py-3', 'px-4', 'font-semibold', 'text-sm', 'text-slate-500', 'border-b-2', 'border-transparent', 'hover:text-indigo-600', 'transition');
+            const lastId=(JSON.parse(localStorage.getItem('analyses_index'))||[])[0]?.id; if(lastId)loadState(lastId);
+            document.querySelector('footer p').innerHTML = `&copy; ${new Date().getFullYear()} Gestor de Pedidos. Todos os direitos reservados.`;
         });
     </script>
 </body>
 </html>
-
 
