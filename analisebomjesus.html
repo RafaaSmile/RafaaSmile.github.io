@@ -199,60 +199,19 @@
             
             const createTableHTML = data => {
                 const headers = { 'CODIGO': 'Cód.', 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'VENDA': 'Venda', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
-                
-                const getSortIcon = key => {
-                    if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`;
-                    return state.sortConfig.direction === 'ascending' 
-                        ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` 
-                        : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`;
-                };
-
-                const headerHTML = Object.entries(headers).map(([key, value]) => {
-                    const isSortable = key !== 'AÇÕES';
-                    return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}>
-                                <div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div>
-                            </th>`;
-                }).join('');
-
+                const getSortIcon = key => { if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`; return state.sortConfig.direction === 'ascending' ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`; };
+                const headerHTML = Object.entries(headers).map(([key, value]) => { const isSortable = key !== 'AÇÕES'; return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}><div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div></th>`; }).join('');
                 const rowsHTML = data.map(item => {
                     let actionsHTML;
-                    if (state.activeTab === 'toOrder') {
-                        actionsHTML = `<div class="action-buttons">
-                                        <button data-action="mark-ordered" data-id="${item.id}" title="Marcar como Pedido" class="text-green-600 hover:text-green-800 transition-colors"><i data-lucide="check-circle-2" class="h-6 w-6"></i></button>
-                                        <button data-action="mark-ignored" data-id="${item.id}" title="Ignorar Item" class="text-red-600 hover:text-red-800 transition-colors"><i data-lucide="x-circle" class="h-6 w-6"></i></button>
-                                    </div>`;
-                    } else {
-                        actionsHTML = `<button data-action="undo" data-id="${item.id}" title="Desfazer" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="undo-2" class="h-6 w-6"></i></button>`;
-                    }
-
-                    const suggestionHTML = state.activeTab === 'toOrder' 
-                        ? `<input type="number" class="w-24 p-1 border rounded-md text-center font-bold text-blue-700 bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500" value="${item.SUGESTAO}" data-id="${item.id}" min="0">` 
-                        : `<span class="font-bold text-gray-800">${item.SUGESTAO}</span>`;
-
+                    if (state.activeTab === 'toOrder') { actionsHTML = `<div class="action-buttons"><button data-action="mark-ordered" data-id="${item.id}" title="Marcar como Pedido" class="text-green-600 hover:text-green-800 transition-colors"><i data-lucide="check-circle-2" class="h-6 w-6"></i></button><button data-action="mark-ignored" data-id="${item.id}" title="Ignorar Item" class="text-red-600 hover:text-red-800 transition-colors"><i data-lucide="x-circle" class="h-6 w-6"></i></button></div>`; } else { actionsHTML = `<button data-action="undo" data-id="${item.id}" title="Desfazer" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="undo-2" class="h-6 w-6"></i></button>`; }
+                    const suggestionHTML = state.activeTab === 'toOrder' ? `<input type="number" class="w-24 p-1 border rounded-md text-center font-bold text-blue-700 bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500" value="${item.SUGESTAO}" data-id="${item.id}" min="0">` : `<span class="font-bold text-gray-800">${item.SUGESTAO}</span>`;
                     const isNegativeStock = item.ESTOQUE < 0;
                     const stockWarningIcon = isNegativeStock ? `<i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 inline-block mr-1" title="Estoque negativo!"></i>` : '';
                     const stockClass = isNegativeStock ? 'font-bold text-red-600' : 'text-gray-500';
                     const rowClass = isNegativeStock ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50';
-
-                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}">
-                                <td data-label="Cód." class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.CODIGO}</td>
-                                <td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td>
-                                <td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div class="flex items-center justify-end md:justify-start ${stockClass}">
-                                        ${stockWarningIcon}
-                                        ${item.ESTOQUE}
-                                    </div>
-                                </td>
-                                <td data-label="Venda" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.VENDA}</td>
-                                <td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td>
-                                <td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td>
-                            </tr>`;
+                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}"><td data-label="Cód." class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.CODIGO}</td><td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td><td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center justify-end md:justify-start ${stockClass}">${stockWarningIcon}${item.ESTOQUE}</div></td><td data-label="Venda" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.VENDA}</td><td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td><td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td></tr>`;
                 }).join('');
-
-                return `<table class="min-w-full responsive-table">
-                            <thead class="bg-gray-50"><tr>${headerHTML}</tr></thead>
-                            <tbody class="bg-white divide-y divide-gray-200">${rowsHTML}</tbody>
-                        </table>`;
+                return `<table class="min-w-full responsive-table"><thead class="bg-gray-50"><tr>${headerHTML}</tr></thead><tbody class="bg-white divide-y divide-gray-200">${rowsHTML}</tbody></table>`;
             };
 
             const renderPaginationControls = totalItems => {
@@ -296,7 +255,32 @@
             app.searchInput.addEventListener('input',e=>{state.searchTerm=e.target.value;state.pagination.currentPage=1;renderTable();});
             app.tablesContainer.addEventListener('click',e=>{const t=e.target,b=t.closest('button'),h=t.closest('.table-header-sortable');if(b){const a=b.dataset.action,i=b.dataset.id;if(a==='mark-ordered')moveItem(i,'toOrder','ordered');if(a==='mark-ignored')moveItem(i,'toOrder','ignored');if(a==='undo')moveItem(i,state.activeTab,'toOrder');}else if(h){const k=h.dataset.sortKey,isAsc=state.sortConfig.key===k&&state.sortConfig.direction==='ascending';state.sortConfig={key:k,direction:isAsc?'descending':'ascending'};renderTable();}});
             app.tablesContainer.addEventListener('change',e=>{if(e.target.type==='number'){const id=e.target.dataset.id,qty=parseInt(e.target.value,10);if(!isNaN(qty))updateQuantity(id,qty);}});
-            app.exportPdfBtn.addEventListener('click',()=>{const{jsPDF}=window.jspdf,d=new jsPDF();d.setFontSize(18);d.text("Sugestão de Pedido",14,22);d.setFontSize(11);d.text(`Fornecedor: ${state.headerInfo.fornecedor}`,14,30);d.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`,14,36);const t=state.products.toOrder.map(p=>[p.CODIGO,p.DESCRICAO,p.ESTOQUE,p.VENDA,p.SUGESTAO]);d.autoTable({startY:45,head:[['Código','Descrição','Estoque','Venda','Qtd. a Pedir']],body:t,theme:'grid',headStyles:{fillColor:[45,55,72]}});d.save(`Pedido_${state.headerInfo.fornecedor.replace(/\s/g,'_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.pdf`);});
+            
+            app.exportPdfBtn.addEventListener('click', () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.text("Sugestão de Pedido", 14, 22);
+                doc.setFontSize(11);
+                doc.text(`Fornecedor: ${state.headerInfo.fornecedor}`, 14, 30);
+                doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 36);
+                
+                // Alterado: Mapeia apenas as colunas necessárias para o PDF
+                const tableData = state.products.toOrder.map(p => [ p.CODIGO, p.DESCRICAO, p.SUGESTAO ]);
+                
+                // Alterado: Define apenas os cabeçalhos necessários
+                doc.autoTable({
+                    startY: 45,
+                    head: [['Código', 'Descrição', 'Qtd. a Pedir']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { fillColor: [45, 55, 72] }
+                });
+
+                const filename = `Pedido_${state.headerInfo.fornecedor.replace(/\s/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+                doc.save(filename);
+            });
+
             app.historyBtn.addEventListener('click',()=>{renderHistory();app.historyModal.classList.remove('hidden');});
             app.closeHistoryModalBtn.addEventListener('click',()=>app.historyModal.classList.add('hidden'));
             app.historyList.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.action,i=b.dataset.id;if(a==='load-history'&&loadState(i))app.historyModal.classList.add('hidden');if(a==='delete-history'){localStorage.removeItem(i);let x=JSON.parse(localStorage.getItem('analyses_index'))||[];x=x.filter(t=>t.id!==i);localStorage.setItem('analyses_index',JSON.stringify(x));renderHistory();}});
