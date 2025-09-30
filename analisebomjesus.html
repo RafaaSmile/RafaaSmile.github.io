@@ -196,7 +196,8 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                        // Corrected: Use `raw: false` to get formatted text, preventing scientific notation.
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
                         processData(jsonData);
                     } catch (err) {
                         showError('Erro ao Processar Excel', 'Ocorreu um erro ao ler o ficheiro. Verifique se não está corrompido.');
@@ -279,12 +280,11 @@
                     cols[key] = findColIndex(COLUMN_SYNONYMS[key]);
                 }
                 
-                // NEW CONFIRMATION LOGIC
                 if (cols.ean === -1 && cols.internalCode !== -1) {
                     tempProcessData = { data, cols, headerRowIndex };
                     app.confirmationModal.classList.remove('hidden');
                     lucide.createIcons();
-                    return; // Stop processing and wait for user input
+                    return; 
                 }
 
                 if (cols.ean === -1 && cols.internalCode === -1) {
