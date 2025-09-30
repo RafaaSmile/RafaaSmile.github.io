@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://i.imgur.com/wvxF7rZ.png" type="image/png">
     <title>Gestor de Pedidos ERP</title>
     <!-- Tailwind CSS para um design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca PapaParse para interpretar arquivos CSV de forma robusta -->
+    <!-- Biblioteca PapaParse para interpretar arquivos CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Biblioteca SheetJS (XLSX) para interpretar arquivos Excel (.xls, .xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Bibliotecas jsPDF e jsPDF-AutoTable para gerar o PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -76,20 +76,20 @@
         <!-- Cabeçalho Principal -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600 p-2 rounded-lg"><i data-lucide="bar-chart-big" class="h-8 w-8 text-white"></i></div>
+                <div class="bg-blue-600 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bar-chart-big" class="lucide lucide-bar-chart-big h-8 w-8 text-white"><path d="M3 3v18h18"></path><rect width="4" height="7" x="7" y="10" rx="1"></rect><rect width="4" height="12" x="15" y="5" rx="1"></rect></svg></div>
                 <div><h1 class="text-3xl font-bold text-gray-900">Gestor de Pedidos</h1><p class="text-gray-500 mt-1">Análise inteligente de sugestão de pedidos.</p></div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                <button id="history-btn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><i data-lucide="history"></i> Histórico</button>
-                <button id="new-analysis-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"><i data-lucide="file-up"></i> Nova Análise</button>
-                <input id="file-upload" type="file" class="hidden" accept=".csv">
+                <button id="history-btn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="history" class="lucide lucide-history"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg> Histórico</button>
+                <button id="new-analysis-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-up" class="lucide lucide-file-up"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 12v6"></path><path d="m15 15-3-3-3 3"></path></svg> Nova Análise</button>
+                <input id="file-upload" type="file" class="hidden" accept=".csv, .xls, .xlsx">
             </div>
         </header>
 
         <!-- Seção de Upload -->
         <div id="upload-section" class="text-center py-20 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer transition-all">
-            <i data-lucide="upload-cloud" class="mx-auto h-12 w-12 text-gray-400"></i>
-            <h3 class="mt-4 text-lg font-medium text-gray-900">Arraste e solte o seu ficheiro .CSV aqui</h3>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="upload-cloud" class="lucide lucide-upload-cloud mx-auto h-12 w-12 text-gray-400"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">Arraste e solte o seu ficheiro .CSV ou .XLS aqui</h3>
             <p class="mt-2 text-sm text-gray-500">ou clique para selecionar</p>
         </div>
 
@@ -106,8 +106,8 @@
                     </nav>
                 </div>
                 <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2">
-                    <div class="relative w-full sm:w-64"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></i><input type="text" id="search-input" placeholder="Pesquisar por descrição..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></div>
-                    <button id="export-pdf-btn" class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"><i data-lucide="file-down"></i> Exportar PDF</button>
+                    <div class="relative w-full sm:w-64"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="search" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="text" id="search-input" placeholder="Pesquisar por EAN ou descrição..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></div>
+                    <button id="export-pdf-btn" class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-down" class="lucide lucide-file-down"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="m9 15 3 3 3-3"></path></svg> Exportar PDF</button>
                 </div>
             </div>
 
@@ -124,14 +124,15 @@
             <div id="pagination-controls" class="flex flex-col md:flex-row justify-between items-center mt-6 gap-4"></div>
 
             <div id="loader" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl"><div class="loader"></div><p class="mt-4 text-lg font-semibold text-gray-700">A processar o ficheiro...</p></div></div>
-            <footer class="text-center mt-12 text-gray-400 text-sm"><p>&copy; 2024 Gestor de Pedidos. Todos os direitos reservados.</p></footer>
+            <footer class="text-center mt-12 text-gray-400 text-sm"><p>© 2025 Gestor de Pedidos. Todos os direitos reservados.</p></footer>
         </main>
     </div>
 
     <!-- Modals -->
-    <div id="history-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-semibold">Histórico de Análises</h3><button id="close-history-modal" class="text-gray-500 hover:text-gray-800"><i data-lucide="x"></i></button></div><div id="history-list" class="p-6 max-h-96 overflow-y-auto"></div></div></div>
-    <div id="error-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900" id="error-title">Erro</h3><div class="mt-2"><p class="text-sm text-gray-500" id="error-message"></p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="close-error-modal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Percebi</button></div></div></div>
-    
+    <div id="history-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-semibold">Histórico de Análises</h3><button id="close-history-modal" class="text-gray-500 hover:text-gray-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div><div id="history-list" class="p-6 max-h-96 overflow-y-auto"></div></div></div>
+    <div id="error-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="alert-triangle" class="lucide lucide-alert-triangle h-6 w-6 text-red-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900" id="error-title">Erro</h3><div class="mt-2"><p class="text-sm text-gray-500" id="error-message"></p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="close-error-modal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Percebi</button></div></div></div>
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="help-circle" class="lucide lucide-help-circle h-6 w-6 text-blue-600"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900">Coluna de EAN não encontrada</h3><div class="mt-2"><p class="text-sm text-gray-500">Não foi possível localizar uma coluna de Código de Barras (EAN). Deseja continuar usando o Código Interno do produto como identificador principal?</p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="confirm-continue-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Sim, continuar</button><button id="confirm-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button></div></div></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -144,7 +145,9 @@
                 historyModal: document.getElementById('history-modal'), closeHistoryModalBtn: document.getElementById('close-history-modal'), 
                 historyList: document.getElementById('history-list'), loader: document.getElementById('loader'), 
                 errorModal: document.getElementById('error-modal'), errorTitle: document.getElementById('error-title'), 
-                errorMessage: document.getElementById('error-message'), closeErrorModalBtn: document.getElementById('close-error-modal'), 
+                errorMessage: document.getElementById('error-message'), closeErrorModalBtn: document.getElementById('close-error-modal'),
+                confirmationModal: document.getElementById('confirmation-modal'), confirmContinueBtn: document.getElementById('confirm-continue-btn'),
+                confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
                 summarySection: document.getElementById('summary-section'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
                 fileUpload: document.getElementById('file-upload'), paginationControls: document.getElementById('pagination-controls')
             };
@@ -152,37 +155,197 @@
             let state = { 
                 products: { toOrder: [], ordered: [], ignored: [] }, headerInfo: {}, activeTab: 'toOrder', 
                 searchTerm: '', sortConfig: { key: 'SUGESTAO', direction: 'descending' }, 
-                currentAnalysisId: null, pagination: { currentPage: 1, itemsPerPage: 25 }
+                currentAnalysisId: null, pagination: { currentPage: 1, itemsPerPage: 25 }, idType: 'EAN'
             };
+            
+            let tempProcessData = {}; // Holds data while waiting for user confirmation
 
             const showError = (title, message) => { app.loader.classList.add('hidden'); app.errorTitle.textContent = title; app.errorMessage.innerHTML = message; app.errorModal.classList.remove('hidden'); lucide.createIcons(); };
             app.closeErrorModalBtn.addEventListener('click', () => app.errorModal.classList.add('hidden'));
 
             const safeParseInt = (v, f=0) => { const p=parseInt(String(v).trim(),10); return isNaN(p)?f:p; };
-            const safeParseFloat = (v, f=0.0) => { const p=parseFloat(String(v).trim().replace(',','.')); return isNaN(p)?f:p; };
+            const safeParseFloat = (v, f=0.0) => { const p=parseFloat(String(v).toString().trim().replace(',','.')); return isNaN(p)?f:p; };
 
-            const handleFile = file => file && file.type === "text/csv" ? parseCSV(file) : showError('Ficheiro Inválido', 'Por favor, selecione um ficheiro com o formato .csv');
-            const parseCSV = file => { app.loader.classList.remove('hidden'); Papa.parse(file, { skipEmptyLines: true, complete: r => { processData(r.data); app.loader.classList.add('hidden'); }, error: e => { showError('Erro de Leitura', 'Não foi possível interpretar o ficheiro CSV.'); console.error(e); } }); };
+            const handleFile = file => {
+                if (!file) return;
+                const fileName = file.name.toLowerCase();
+                app.loader.classList.remove('hidden');
+                if (fileName.endsWith('.csv')) {
+                    parseCSV(file);
+                } else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+                    parseXLS(file);
+                } else {
+                    showError('Ficheiro Inválido', 'Por favor, selecione um ficheiro com o formato .csv, .xls ou .xlsx');
+                    app.loader.classList.add('hidden');
+                }
+            };
+            
+            const parseCSV = file => { 
+                Papa.parse(file, { 
+                    skipEmptyLines: true, 
+                    complete: r => { processData(r.data); app.loader.classList.add('hidden'); }, 
+                    error: e => { showError('Erro de Leitura', 'Não foi possível interpretar o ficheiro CSV.'); console.error(e); app.loader.classList.add('hidden'); } 
+                }); 
+            };
+            
+            const parseXLS = file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = e.target.result;
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                        processData(jsonData);
+                    } catch (err) {
+                        showError('Erro ao Processar Excel', 'Ocorreu um erro ao ler o ficheiro. Verifique se não está corrompido.');
+                        console.error(err);
+                    } finally {
+                         app.loader.classList.add('hidden');
+                    }
+                };
+                reader.onerror = (e) => {
+                    showError('Erro de Leitura', 'Não foi possível ler o ficheiro Excel.');
+                    console.error(e);
+                    app.loader.classList.add('hidden');
+                };
+                reader.readAsArrayBuffer(file);
+            };
 
             const resetToUploadView = () => {
                 app.mainContent.classList.add('hidden'); app.uploadSection.classList.remove('hidden');
-                state = { products: { toOrder:[],ordered:[],ignored:[]}, headerInfo:{}, activeTab:'toOrder', searchTerm:'', sortConfig:{key:'SUGESTAO',direction:'descending'}, currentAnalysisId:null, pagination:{currentPage:1,itemsPerPage:25}};
+                state = { products: { toOrder:[],ordered:[],ignored:[]}, headerInfo:{}, activeTab:'toOrder', searchTerm:'', sortConfig:{key:'SUGESTAO',direction:'descending'}, currentAnalysisId:null, pagination:{currentPage:1,itemsPerPage:25}, idType: 'EAN'};
                 app.searchInput.value = '';
             };
 
-            const processData = data => {
-                const findRowContaining=t=>data.find(r=>r.join(';').toUpperCase().includes(t.toUpperCase()));
-                const extractInfo=(r,x)=>(r?(r.join(';').match(x)||[])[1]?.trim():'Não identificado');
-                state.headerInfo={fornecedor:extractInfo(findRowContaining('FORNECEDOR:'),/FORNECEDOR:\s*\d+\s*-\s*(.*?)(?:;|$)/i),periodo:extractInfo(findRowContaining('GIRO/SUGESTAO'),/PERIODO DE\s*(.*?)(?:;;|$)/i)};
-                let h=data.findIndex(r=>r[0]?.trim().toUpperCase()==='CODIGO'); if(h===-1){showError('Formato Inválido','A coluna "CODIGO" não foi encontrada.');return;}
-                const hs=data[h].map(h=>h.trim().toUpperCase()),f=a=>a.map(l=>hs.indexOf(l)).find(i=>i!==-1)??-1;
-                const c={c:f(['CODIGO']),d:f(['DESCRICAO','DESCRIÇÃO']),e:f(['F01','EST','ESTOQUE']),o:f(['C.REAL','CUSTO']),b:f(['CODIGO BARRAS'])};
-                if(c.b!==-1){c.v=c.b+1;c.s=c.b+2;}else{showError('Formato Inválido','"CODIGO BARRAS" é essencial e não foi encontrada.');return;}
-                state.headerInfo.hasCostColumn=c.o!==-1; const m=Object.entries({CODIGO:c.c,DESCRICAO:c.d,ESTOQUE:c.e}).filter(([k,v])=>v===-1).map(([k])=>k); if(m.length>0){showError('Colunas em Falta',`Não encontradas: <strong>${m.join(', ')}</strong>.`);return;}
-                const p=data.slice(h+1).map(r=>{const g=r[c.c]?.trim();if(!g||isNaN(parseInt(g)))return null;return{id:g,CODIGO:g,DESCRICAO:r[c.d]?.trim()||'S/D',ESTOQUE:safeParseInt(r[c.e]),VENDA:safeParseInt(r[c.v]),SUGESTAO:safeParseInt(r[c.s]),C_REAL:state.headerInfo.hasCostColumn?safeParseFloat(r[c.o]):0};}).filter(p=>p&&p.SUGESTAO>0);
-                if(p.length===0){showError('Nenhum Produto Válido','Nenhum produto com sugestão de compra (> 0) foi encontrado.');return;}
-                state.products={toOrder:p,ordered:[],ignored:[]}; state.currentAnalysisId=`analysis_${Date.now()}`; saveState(); render();
-                app.uploadSection.classList.add('hidden'); app.mainContent.classList.remove('hidden');
+            const processData = (data) => {
+                const COLUMN_SYNONYMS = {
+                    ean: ['CODIGO BARRAS', 'EAN', 'CÓD. BARRAS', 'GTIN'],
+                    description: ['DESCRICAO', 'DESCRIÇÃO', 'PRODUTO', 'NOME DO PRODUTO', 'DESC'],
+                    stock: ['ESTOQUE', 'EST', 'F01', 'QTD', 'QUANTIDADE', 'SALDO'],
+                    cost: ['C.REAL', 'CUSTO', 'PREÇO DE CUSTO', 'VL CUSTO', 'CUSTO REAL'],
+                    sale: ['VENDA', 'VDA/', 'GIRO', 'VENDAS'],
+                    suggestion: ['SUGESTAO', 'SUGEST.', 'SUG', 'QTD_SUGERIDA', 'SUGESTAO COMPRA'],
+                    internalCode: ['CODIGO', 'CÓD.', 'SKU', 'COD INTERNO'],
+                };
+
+                const findHeaderRow = (data, synonyms) => {
+                    let bestMatch = { score: 0, index: -1 };
+                    const allSynonyms = new Set(Object.values(synonyms).flat());
+
+                    for (let i = 0; i < Math.min(data.length, 20); i++) {
+                        const row = data[i];
+                        if (!Array.isArray(row) || row.length < 3) continue;
+                        
+                        let score = 0;
+                        const upperRow = row.map(cell => String(cell).trim().toUpperCase());
+                        
+                        for (const synonym of allSynonyms) {
+                            if (upperRow.includes(synonym)) {
+                                score++;
+                            }
+                        }
+
+                        if (score > bestMatch.score) {
+                            bestMatch = { score, index: i };
+                        }
+                    }
+                    return bestMatch.score > 2 ? bestMatch.index : -1;
+                };
+
+                const headerRowIndex = findHeaderRow(data, COLUMN_SYNONYMS);
+
+                if (headerRowIndex === -1) {
+                    showError('Formato Inválido', 'Não foi possível identificar uma linha de cabeçalho válida no ficheiro. Verifique se as colunas têm nomes como EAN, DESCRICAO, ESTOQUE, etc.');
+                    return;
+                }
+
+                const mainHeaders = data[headerRowIndex].map(h => String(h).trim().toUpperCase());
+                const secondaryHeaders = headerRowIndex > 0 ? data[headerRowIndex - 1].map(h => String(h).trim().toUpperCase()) : [];
+
+                const findColIndex = (aliases) => {
+                    for (const headerSet of [mainHeaders, secondaryHeaders]) {
+                        for (const alias of aliases) {
+                            const index = headerSet.indexOf(alias);
+                            if (index !== -1) return index;
+                        }
+                    }
+                    return -1;
+                };
+
+                const cols = {};
+                for (const key in COLUMN_SYNONYMS) {
+                    cols[key] = findColIndex(COLUMN_SYNONYMS[key]);
+                }
+                
+                // NEW CONFIRMATION LOGIC
+                if (cols.ean === -1 && cols.internalCode !== -1) {
+                    tempProcessData = { data, cols, headerRowIndex };
+                    app.confirmationModal.classList.remove('hidden');
+                    lucide.createIcons();
+                    return; // Stop processing and wait for user input
+                }
+
+                if (cols.ean === -1 && cols.internalCode === -1) {
+                    showError('Colunas Essenciais em Falta', `Não foi possível encontrar uma coluna para <strong>EAN (Código de Barras)</strong> ou <strong>Código Interno</strong>.`);
+                    return;
+                }
+                
+                finalizeProcessing(data, cols, headerRowIndex, false);
+            };
+
+            const finalizeProcessing = (data, cols, headerRowIndex, useInternalCodeAsId) => {
+                state.idType = useInternalCodeAsId ? 'CODIGO' : 'EAN';
+                const idColumn = useInternalCodeAsId ? cols.internalCode : cols.ean;
+
+                const findRowContaining = t => data.find(r => Array.isArray(r) && r.join(';').toUpperCase().includes(t.toUpperCase()));
+                const extractInfo = (r, x) => (r ? (r.join(';').match(x) || [])[1]?.trim() : 'Não identificado');
+                state.headerInfo = {
+                    fornecedor: extractInfo(findRowContaining('FORNECEDOR:'), /FORNECEDOR:\s*\d+\s*-\s*(.*?)(?:;|$)/i),
+                    periodo: extractInfo(findRowContaining('GIRO/SUGESTAO'), /PERIODO DE\s*(.*?)(?:;;|$)/i)
+                };
+                
+                state.headerInfo.hasCostColumn = cols.cost !== -1;
+                const requiredCols = { description: cols.description, stock: cols.stock, suggestion: cols.suggestion};
+                const missing = Object.entries(requiredCols)
+                    .filter(([key, value]) => value === -1)
+                    .map(([key]) => key);
+                
+                if (missing.length > 0) {
+                     showError('Colunas Essenciais em Falta', `Não foi possível encontrar as seguintes colunas no ficheiro: <strong>${missing.join(', ')}</strong>.`);
+                     return;
+                }
+
+                const products = data.slice(headerRowIndex + 1).map(row => {
+                    const id = row[idColumn]?.toString().trim();
+                    if (!id || id.length < 1) return null;
+
+                    const suggestion = safeParseInt(row[cols.suggestion]);
+                    if (suggestion <= 0) return null;
+
+                    return {
+                        id: id,
+                        IDENTIFIER: id,
+                        DESCRICAO: row[cols.description]?.toString().trim() || 'S/D',
+                        ESTOQUE: safeParseInt(row[cols.stock]),
+                        VENDA: cols.sale !== -1 ? safeParseInt(row[cols.sale]) : 0,
+                        SUGESTAO: suggestion,
+                        C_REAL: state.headerInfo.hasCostColumn ? safeParseFloat(row[cols.cost]) : 0,
+                    };
+                }).filter(p => p !== null);
+
+                if (products.length === 0) {
+                    showError('Nenhum Produto Válido', `Nenhum produto com sugestão de compra (> 0) e ${state.idType} válido foi encontrado no ficheiro.`);
+                    return;
+                }
+                
+                state.products = { toOrder: products, ordered: [], ignored: [] };
+                state.currentAnalysisId = `analysis_${Date.now()}`;
+                saveState();
+                render();
+                app.uploadSection.classList.add('hidden');
+                app.mainContent.classList.remove('hidden');
             };
 
             const saveState=()=>{if(!state.currentAnalysisId)return;localStorage.setItem(state.currentAnalysisId,JSON.stringify(state));let i=JSON.parse(localStorage.getItem('analyses_index'))||[];if(!i.some(t=>t.id===state.currentAnalysisId))i.unshift({id:state.currentAnalysisId,date:new Date().toISOString(),fornecedor:state.headerInfo.fornecedor});if(i.length>20){i.slice(20).forEach(t=>localStorage.removeItem(t.id));i=i.slice(0,20);}localStorage.setItem('analyses_index',JSON.stringify(i));};
@@ -196,10 +359,11 @@
             const updateCounts=()=>{document.getElementById('toOrder-count').textContent=state.products.toOrder.length;document.getElementById('ordered-count').textContent=state.products.ordered.length;document.getElementById('ignored-count').textContent=state.products.ignored.length;};
             const renderSummary=()=>{const p=state.products,h=state.headerInfo.hasCostColumn,c=p.toOrder.reduce((s,i)=>s+(i.SUGESTAO*i.C_REAL),0),d=h?c.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):`<span class="text-lg" title="Coluna C.REAL não encontrada">N/D</span>`;app.summarySection.innerHTML=`<div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="h-6 w-6 text-blue-600"></i></div><div><p class="text-gray-500 text-sm">Itens a Pedir</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.length}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="h-6 w-6 text-green-600"></i></div><div><p class="text-gray-500 text-sm">Total de Unidades</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.reduce((s,i)=>s+i.SUGESTAO,0)}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="h-6 w-6 text-yellow-600"></i></div><div><p class="text-gray-500 text-sm">Custo Estimado</p><p class="text-2xl font-bold text-gray-800">${d}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i></div><div><p class="text-gray-500 text-sm">Itens Ignorados</p><p class="text-2xl font-bold text-gray-800">${p.ignored.length}</p></div></div>`;lucide.createIcons();};
             
-            const renderTable=()=>{const c=document.getElementById(`${state.activeTab}-content`);let d=[...state.products[state.activeTab]];if(state.searchTerm)d=d.filter(p=>p.DESCRICAO.toLowerCase().includes(state.searchTerm.toLowerCase()));d.sort((a,b)=>{const vA=a[state.sortConfig.key],vB=b[state.sortConfig.key];let c=0;if(typeof vA==='string')c=vA.localeCompare(vB);else c=(vA>vB)?1:((vA<vB)?-1:0);return state.sortConfig.direction==='ascending'?c:-c;});const {currentPage,itemsPerPage}=state.pagination;const tP=itemsPerPage===0?1:Math.ceil(d.length/itemsPerPage);const pD=itemsPerPage===0?d:d.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);if(pD.length===0){c.innerHTML=`<div class="p-8 text-center text-gray-500">Nenhum item encontrado.</div>`;app.paginationControls.innerHTML='';return;}c.innerHTML=createTableHTML(pD);renderPaginationControls(d.length);lucide.createIcons();};
+            const renderTable=()=>{const c=document.getElementById(`${state.activeTab}-content`);let d=[...state.products[state.activeTab]];if(state.searchTerm){const s=state.searchTerm.toLowerCase();d=d.filter(p=>p.DESCRICAO.toLowerCase().includes(s)||p.IDENTIFIER.includes(s));}d.sort((a,b)=>{const vA=a[state.sortConfig.key],vB=b[state.sortConfig.key];let c=0;if(typeof vA==='string')c=vA.localeCompare(vB);else c=(vA>vB)?1:((vA<vB)?-1:0);return state.sortConfig.direction==='ascending'?c:-c;});const {currentPage,itemsPerPage}=state.pagination;const tP=itemsPerPage===0?1:Math.ceil(d.length/itemsPerPage);const pD=itemsPerPage===0?d:d.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);if(pD.length===0){c.innerHTML=`<div class="p-8 text-center text-gray-500">Nenhum item encontrado.</div>`;app.paginationControls.innerHTML='';return;}c.innerHTML=createTableHTML(pD);renderPaginationControls(d.length);lucide.createIcons();};
             
             const createTableHTML = data => {
-                const headers = { 'CODIGO': 'Cód.', 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'VENDA': 'Venda', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
+                const idHeaderLabel = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno';
+                const headers = { 'IDENTIFIER': idHeaderLabel, 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'C_REAL': 'Custo Real', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
                 const getSortIcon = key => { if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`; return state.sortConfig.direction === 'ascending' ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`; };
                 const headerHTML = Object.entries(headers).map(([key, value]) => { const isSortable = key !== 'AÇÕES'; return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}><div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div></th>`; }).join('');
                 const rowsHTML = data.map(item => {
@@ -209,8 +373,16 @@
                     const isNegativeStock = item.ESTOQUE < 0;
                     const stockWarningIcon = isNegativeStock ? `<i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 inline-block mr-1" title="Estoque negativo!"></i>` : '';
                     const stockClass = isNegativeStock ? 'font-bold text-red-600' : 'text-gray-500';
+                    const costHTML = state.headerInfo.hasCostColumn ? item.C_REAL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/D';
                     const rowClass = isNegativeStock ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50';
-                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}"><td data-label="Cód." class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.CODIGO}</td><td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td><td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center justify-end md:justify-start ${stockClass}">${stockWarningIcon}${item.ESTOQUE}</div></td><td data-label="Venda" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.VENDA}</td><td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td><td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td></tr>`;
+                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}">
+                                <td data-label="${idHeaderLabel}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.IDENTIFIER}</td>
+                                <td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td>
+                                <td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center justify-end md:justify-start ${stockClass}">${stockWarningIcon}${item.ESTOQUE}</div></td>
+                                <td data-label="Custo Real" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">${costHTML}</td>
+                                <td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td>
+                                <td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td>
+                            </tr>`;
                 }).join('');
                 return `<table class="min-w-full responsive-table"><thead class="bg-gray-50"><tr>${headerHTML}</tr></thead><tbody class="bg-white divide-y divide-gray-200">${rowsHTML}</tbody></table>`;
             };
@@ -260,23 +432,54 @@
             app.exportPdfBtn.addEventListener('click', () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
+                const hasCost = state.headerInfo.hasCostColumn;
+                const idHeaderLabel = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno';
+                
                 doc.setFontSize(18);
                 doc.text("Sugestão de Pedido", 14, 22);
                 doc.setFontSize(11);
+                doc.setTextColor(100);
                 doc.text(`Fornecedor: ${state.headerInfo.fornecedor}`, 14, 30);
                 doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 36);
                 
-                // Alterado: Mapeia apenas as colunas necessárias para o PDF
-                const tableData = state.products.toOrder.map(p => [ p.CODIGO, p.DESCRICAO, p.SUGESTAO ]);
+                const tableHeaders = [idHeaderLabel, 'Descrição', 'Qtd. a Pedir'];
+                if(hasCost) {
+                    tableHeaders.push('Custo Unit.');
+                    tableHeaders.push('Custo Total');
+                }
+
+                const tableData = state.products.toOrder.map(p => {
+                    const row = [ p.IDENTIFIER, p.DESCRICAO, p.SUGESTAO ];
+                    if(hasCost) {
+                        row.push(p.C_REAL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+                        row.push((p.C_REAL * p.SUGESTAO).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+                    }
+                    return row;
+                });
                 
-                // Alterado: Define apenas os cabeçalhos necessários
+                let finalY = 0;
                 doc.autoTable({
                     startY: 45,
-                    head: [['Código', 'Descrição', 'Qtd. a Pedir']],
+                    head: [tableHeaders],
                     body: tableData,
                     theme: 'grid',
-                    headStyles: { fillColor: [45, 55, 72] }
+                    headStyles: { fillColor: [45, 55, 72] },
+                    didDrawPage: function (data) {
+                        finalY = data.cursor.y;
+                    }
                 });
+                
+                if (finalY === 0 && doc.lastAutoTable) { 
+                    finalY = doc.lastAutoTable.finalY;
+                }
+
+                if(hasCost) {
+                    const totalCost = state.products.toOrder.reduce((sum, item) => sum + (item.C_REAL * item.SUGESTAO), 0);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Custo Total do Pedido:', 14, finalY + 10);
+                    doc.text(totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 200, finalY + 10, { align: 'right' });
+                }
 
                 const filename = `Pedido_${state.headerInfo.fornecedor.replace(/\s/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
                 doc.save(filename);
@@ -288,10 +491,19 @@
             app.paginationControls.addEventListener('click', e => {const target = e.target.closest('button'); if (!target) return; if (target.id === 'prev-page') { state.pagination.currentPage--; } if (target.id === 'next-page') { state.pagination.currentPage++; } renderTable();});
             app.paginationControls.addEventListener('change', e => {if (e.target.id === 'items-per-page') { state.pagination.itemsPerPage = Number(e.target.value); state.pagination.currentPage = 1; renderTable(); }});
 
+            app.confirmContinueBtn.addEventListener('click', () => {
+                app.confirmationModal.classList.add('hidden');
+                const { data, cols, headerRowIndex } = tempProcessData;
+                finalizeProcessing(data, cols, headerRowIndex, true); // True to use internal code
+            });
+
+            app.confirmCancelBtn.addEventListener('click', () => {
+                app.confirmationModal.classList.add('hidden');
+                resetToUploadView();
+            });
+
             const lastId=(JSON.parse(localStorage.getItem('analyses_index'))||[])[0]?.id; if(lastId)loadState(lastId);
             document.querySelector('footer p').innerHTML = `&copy; ${new Date().getFullYear()} Gestor de Pedidos. Todos os direitos reservados.`;
         });
     </script>
-</body>
-</html>
-
+</body></html>
