@@ -1,170 +1,982 @@
-<html lang="pt-BR"><head>
+<html lang="pt-BR">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://i.imgur.com/wvxF7rZ.png" type="image/png">
     <title>Gestor de Pedidos ERP</title>
+
     <!-- Tailwind CSS para um design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Biblioteca PapaParse para interpretar arquivos CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
     <!-- Biblioteca SheetJS (XLSX) para interpretar arquivos Excel (.xls, .xlsx) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <!-- Bibliotecas jsPDF e jsPDF-AutoTable para gerar o PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
     <!-- Ícones da biblioteca Lucide -->
+
     <script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     <style>
         /* Estilos personalizados para a aplicação */
-        body { font-family: 'Inter', sans-serif; }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        .tab-active { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
-        .table-header-sortable { cursor: pointer; }
-        .table-header-sortable:hover { background-color: #f0f4f8; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Transições suaves */
-        .transition-all { transition: all 0.3s ease-in-out; }
-        /* Estilo para feedback de drag-and-drop */
-        .dragging-over {
-            border-color: #3b82f6; /* blue-500 */
-            background-color: #eff6ff; /* blue-50 */
+
+        body {
+            font-family: 'Inter', sans-serif;
         }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        .tab-active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .table-header-sortable {
+            cursor: pointer;
+        }
+
+        .table-header-sortable:hover {
+            background-color: #f0f4f8;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Transições suaves */
+
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Estilo para feedback de drag-and-drop */
+
+        .dragging-over {
+
+            border-color: #3b82f6;
+            /* blue-500 */
+
+            background-color: #eff6ff;
+            /* blue-50 */
+
+        }
+
+
 
         /* Estilos para a tabela responsiva (layout de cartão em ecrãs pequenos) */
+
         @media (max-width: 768px) {
+
             .responsive-table thead {
-                display: none; /* Esconde o cabeçalho tradicional */
+
+                display: none;
+                /* Esconde o cabeçalho tradicional */
+
             }
-            .responsive-table, .responsive-table tbody, .responsive-table tr {
-                display: block;
-            }
+
+            .responsive-table,
+            .responsive-table tbody,
             .responsive-table tr {
-                border: 1px solid #e5e7eb; /* gray-200 */
-                border-radius: 0.75rem; /* rounded-xl */
+
+                display: block;
+
+            }
+
+            .responsive-table tr {
+
+                border: 1px solid #e5e7eb;
+                /* gray-200 */
+
+                border-radius: 0.75rem;
+                /* rounded-xl */
+
                 margin-bottom: 1rem;
+
                 padding: 1rem;
+
                 background-color: #ffffff;
+
                 box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
             }
+
             .responsive-table td {
+
                 display: flex;
+
                 justify-content: space-between;
+
                 align-items: center;
+
                 padding: 0.75rem 0.25rem;
-                border-bottom: 1px solid #f3f4f6; /* gray-100 */
+
+                border-bottom: 1px solid #f3f4f6;
+                /* gray-100 */
+
                 font-size: 14px;
+
             }
+
             .responsive-table td:last-child {
+
                 border-bottom: none;
+
             }
+
             .responsive-table td::before {
+
                 content: attr(data-label);
+
                 font-weight: 600;
-                color: #4b5563; /* gray-600 */
+
+                color: #4b5563;
+                /* gray-600 */
+
             }
+
             .responsive-table .action-buttons {
+
                 justify-content: flex-end;
-                gap: 1.5rem; /* Aumenta o espaçamento para facilitar o toque */
+
+                gap: 1.5rem;
+                /* Aumenta o espaçamento para facilitar o toque */
+
             }
+
         }
     </style>
+
 </head>
+
 <body class="bg-gray-100 text-gray-800">
 
+
+
     <div id="app" class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+
         <!-- Cabeçalho Principal -->
+
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bar-chart-big" class="lucide lucide-bar-chart-big h-8 w-8 text-white"><path d="M3 3v18h18"></path><rect width="4" height="7" x="7" y="10" rx="1"></rect><rect width="4" height="12" x="15" y="5" rx="1"></rect></svg></div>
-                <div><h1 class="text-3xl font-bold text-gray-900">Gestor de Pedidos</h1><p class="text-gray-500 mt-1">Análise inteligente de sugestão de pedidos.</p></div>
+
+                <div class="bg-blue-600 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" data-lucide="bar-chart-big"
+                        class="lucide lucide-bar-chart-big h-8 w-8 text-white">
+                        <path d="M3 3v18h18"></path>
+                        <rect width="4" height="7" x="7" y="10" rx="1"></rect>
+                        <rect width="4" height="12" x="15" y="5" rx="1"></rect>
+                    </svg></div>
+
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Gestor de Pedidos</h1>
+                    <p class="text-gray-500 mt-1">Análise inteligente de sugestão de pedidos.</p>
+                </div>
+
             </div>
+
             <div class="flex items-center gap-2 flex-wrap">
-                <button id="history-btn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="history" class="lucide lucide-history"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg> Histórico</button>
-                <button id="new-analysis-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-up" class="lucide lucide-file-up"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 12v6"></path><path d="m15 15-3-3-3 3"></path></svg> Nova Análise</button>
+
+                <button id="branch-manager-btn"
+                    class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="network" class="lucide lucide-network h-5 w-5">
+                        <rect x="16" y="16" width="6" height="6" rx="1"></rect>
+                        <rect x="2" y="16" width="6" height="6" rx="1"></rect>
+                        <rect x="9" y="2" width="6" height="6" rx="1"></rect>
+                        <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path>
+                        <path d="M12 12V8"></path>
+                    </svg> Gerir Filiais</button>
+
+                <button id="history-btn"
+                    class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center gap-2"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="history" class="lucide lucide-history">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                        <path d="M12 7v5l4 2"></path>
+                    </svg> Histórico</button>
+
+                <button id="new-analysis-btn"
+                    class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="file-up" class="lucide lucide-file-up">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <path d="M12 12v6"></path>
+                        <path d="m15 15-3-3-3 3"></path>
+                    </svg> Nova Análise</button>
+
                 <input id="file-upload" type="file" class="hidden" accept=".csv, .xls, .xlsx">
+
             </div>
+
         </header>
 
+
+
         <!-- Seção de Upload -->
-        <div id="upload-section" class="text-center py-20 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="upload-cloud" class="lucide lucide-upload-cloud mx-auto h-12 w-12 text-gray-400"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>
+
+        <div id="upload-section"
+            class="text-center py-20 border-2 border-dashed border-gray-300 rounded-xl bg-white cursor-pointer transition-all">
+
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                data-lucide="upload-cloud" class="lucide lucide-upload-cloud mx-auto h-12 w-12 text-gray-400">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                <path d="M12 12v9"></path>
+                <path d="m16 16-4-4-4 4"></path>
+            </svg>
+
             <h3 class="mt-4 text-lg font-medium text-gray-900">Arraste e solte o seu ficheiro .CSV ou .XLS aqui</h3>
+
             <p class="mt-2 text-sm text-gray-500">ou clique para selecionar</p>
+
         </div>
 
+
+
         <!-- Conteúdo Principal da Análise -->
+
         <main id="main-content" class="hidden">
+
             <div id="report-info" class="mb-6 p-5 bg-white border border-gray-200 rounded-xl shadow-sm"></div>
+
             <div id="summary-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6"></div>
+
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+
                 <div class="border-b border-gray-200 w-full md:w-auto">
+
                     <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="toOrder">A Pedir (<span id="toOrder-count">0</span>)</button>
-                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ordered">Pedidos (<span id="ordered-count">0</span>)</button>
-                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ignored">Ignorados (<span id="ignored-count">0</span>)</button>
+
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="toOrder">A Pedir
+                            (<span id="toOrder-count">0</span>)</button>
+
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ordered">Pedidos
+                            (<span id="ordered-count">0</span>)</button>
+
+                        <button class="tab-btn py-3 px-1 border-b-2 font-medium text-sm" data-tab="ignored">Ignorados
+                            (<span id="ignored-count">0</span>)</button>
+
                     </nav>
+
                 </div>
+
                 <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2">
-                    <div class="relative w-full sm:w-64"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="search" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="text" id="search-input" placeholder="Pesquisar por EAN ou descrição..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></div>
-                    <button id="export-pdf-btn" class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-down" class="lucide lucide-file-down"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="m9 15 3 3 3-3"></path></svg> Exportar PDF</button>
+
+                    <div class="relative w-full sm:w-64"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" data-lucide="search"
+                            class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg><input type="text" id="search-input" placeholder="Pesquisar por EAN ou descrição..."
+                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <!-- Botão Adicionado -->
+
+                    <button id="add-product-btn"
+                        class="w-full sm:w-auto bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition-all flex items-center justify-center gap-2"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="plus" class="lucide lucide-plus h-5 w-5">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg> Incluir Produto</button>
+
+                    <button id="export-pdf-btn"
+                        class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="file-down" class="lucide lucide-file-down">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="M12 18v-6"></path>
+                            <path d="m9 15 3 3 3-3"></path>
+                        </svg> Exportar PDF</button>
+
                 </div>
+
             </div>
+
+
 
             <!-- Tabelas de Dados -->
+
             <div id="tables-container" class="bg-white shadow-md rounded-lg overflow-hidden md:overflow-hidden">
+
                 <div class="overflow-x-auto">
+
                     <div id="toOrder-content" class="tab-content"></div>
+
                     <div id="ordered-content" class="tab-content hidden"></div>
+
                     <div id="ignored-content" class="tab-content hidden"></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Controles de Paginação -->
+
+            <div id="pagination-controls" class="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
+            </div>
+
+
+
+            <div id="loader"
+                class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-lg font-semibold text-gray-700">A processar o ficheiro...</p>
                 </div>
             </div>
-            
-            <!-- Controles de Paginação -->
-            <div id="pagination-controls" class="flex flex-col md:flex-row justify-between items-center mt-6 gap-4"></div>
 
-            <div id="loader" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="flex flex-col items-center bg-white p-8 rounded-lg shadow-xl"><div class="loader"></div><p class="mt-4 text-lg font-semibold text-gray-700">A processar o ficheiro...</p></div></div>
-            <footer class="text-center mt-12 text-gray-400 text-sm"><p>© 2025 Gestor de Pedidos. Todos os direitos reservados.</p></footer>
+            <footer class="text-center mt-12 text-gray-400 text-sm">
+                <p>© 2025 Gestor de Pedidos. Todos os direitos reservados.</p>
+            </footer>
+
         </main>
+
     </div>
 
+
+
     <!-- Modals -->
-    <div id="history-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all"><div class="flex justify-between items-center p-4 border-b"><h3 class="text-xl font-semibold">Histórico de Análises</h3><button id="close-history-modal" class="text-gray-500 hover:text-gray-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div><div id="history-list" class="p-6 max-h-96 overflow-y-auto"></div></div></div>
-    <div id="error-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="alert-triangle" class="lucide lucide-alert-triangle h-6 w-6 text-red-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900" id="error-title">Erro</h3><div class="mt-2"><p class="text-sm text-gray-500" id="error-message"></p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="close-error-modal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Percebi</button></div></div></div>
-    <div id="confirmation-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all"><div class="p-6"><div class="flex items-start"><div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="help-circle" class="lucide lucide-help-circle h-6 w-6 text-blue-600"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></div><div class="ml-4 text-left"><h3 class="text-lg leading-6 font-medium text-gray-900">Coluna de EAN não encontrada</h3><div class="mt-2"><p class="text-sm text-gray-500">Não foi possível localizar uma coluna de Código de Barras (EAN). Deseja continuar usando o Código Interno do produto como identificador principal?</p></div></div></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button id="confirm-continue-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Sim, continuar</button><button id="confirm-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button></div></div></div>
+
+    <div id="history-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Histórico de Análises</h3><button id="close-history-modal"
+                    class="text-gray-500 hover:text-gray-800"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" data-lucide="x" class="lucide lucide-x">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg></button>
+            </div>
+            <div id="history-list" class="p-6 max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="error-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+            <div class="p-6">
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="alert-triangle" class="lucide lucide-alert-triangle h-6 w-6 text-red-600">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                            <path d="M12 9v4"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg></div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="error-title">Erro</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button
+                    id="close-error-modal" type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Percebi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmation-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+            <div class="p-6">
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="help-circle" class="lucide lucide-help-circle h-6 w-6 text-blue-600">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg></div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Coluna de EAN não encontrada</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Não foi possível localizar uma coluna de Código de Barras
+                                (EAN). Deseja continuar usando o Código Interno do produto como identificador principal?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"><button
+                    id="confirm-continue-btn" type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Sim,
+                    continuar</button><button id="confirm-cancel-btn" type="button"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modal de Gestão de Filiais (Global) - MODIFICADO -->
+    <div id="branch-manager-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Gerir Filiais e Configurações</h3>
+                <button type="button" id="close-branch-manager-modal" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="x" class="lucide lucide-x">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <!-- Seção para Adicionar Nova Filial -->
+                <form id="add-branch-form" class="flex items-center gap-2">
+                    <input type="text" id="add-branch-name" placeholder="Nome da nova filial" required
+                        class="flex-grow block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button type="submit"
+                        class="bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center gap-2"
+                        title="Adicionar Filial"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" data-lucide="plus"
+                            class="lucide lucide-plus h-5 w-5">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg></button>
+                </form>
+
+                <!-- Lista de Filiais Existentes -->
+                <div id="branch-list" class="max-h-48 overflow-y-auto space-y-2 border-t border-b py-4">
+                    <!-- Lista de filiais será inserida aqui -->
+                </div>
+
+                <!-- Seção Modificada: Configuração de Transferência -->
+                <div class="space-y-2">
+                    <label for="transfer-percentage-input" class="block text-sm font-medium text-gray-700">Cobertura de
+                        Transferência (%)</label>
+                    <p class="text-xs text-gray-500">Define a % de cobertura desejada para cálculo da SUGESTÃO DE
+                        TRANSFERÊNCIA TOTAL (exportável), baseada nos dias do período de análise.</p>
+                    <div class="relative mt-1">
+                        <input type="number" id="transfer-percentage-input" value="50" min="0"
+                            class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé do Modal com Botão Salvar -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                <button id="save-settings-btn" type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Salvar
+                    e Fechar</button>
+                <button id="cancel-settings-btn" type="button"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modal de Gestão de Estoque por Filial (Por Produto) - MODIFICADO -->
+    <div id="branch-stock-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Gerir Estoque e Equilíbrio</h3> <!-- Titulo alterado -->
+                <button type="button" id="close-branch-stock-modal" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="x" class="lucide lucide-x">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Produto:</p>
+                    <h4 id="branch-stock-product-name" class="font-semibold text-gray-900 mb-4"></h4>
+                </div>
+
+                <!-- Seção REMOVIDA: Cálculo de Sugestão de Transferência baseado em %/venda -->
+                <!-- <div id="branch-stock-transfer-details" class="p-4 bg-blue-50 rounded-lg space-y-2"> ... </div> -->
+
+                <!-- Lista de Estoque por Filial -->
+                <div id="branch-stock-list" class="max-h-48 overflow-y-auto space-y-3 pt-4">
+                    <!-- Inputs de estoque por filial serão inseridos aqui -->
+                </div>
+
+                <!-- Seção MODIFICADA: Status de Equilíbrio -->
+                <div id="branch-balance-container" class="space-y-2 pt-4 border-t">
+                    <h5 class="font-semibold text-gray-800">Status de Equilíbrio por Filial</h5>
+                    <p class="text-xs text-gray-500">Calculado com base no estoque total atual dividido pelo número de
+                        filiais.</p>
+                    <div id="branch-balance-list" class="max-h-40 overflow-y-auto space-y-2">
+                        <!-- Lista de status de filial (excedente/défice) -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                <button id="save-branch-stock-btn" type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Salvar</button>
+                <button id="cancel-branch-stock-btn" type="button"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modal de Opções de Exportação -->
+
+    <div id="export-options-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+
+            <div class="flex justify-between items-center p-4 border-b">
+
+                <h3 class="text-xl font-semibold">Opções de Exportação PDF</h3>
+
+                <button type="button" id="close-export-options-modal" class="text-gray-500 hover:text-gray-800">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="x" class="lucide lucide-x">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+
+                </button>
+
+            </div>
+
+            <div class="p-6 space-y-4">
+
+                <p class="text-sm text-gray-600">Selecione as colunas para incluir no PDF:</p>
+
+                <ul id="export-column-list" class="max-h-64 overflow-y-auto space-y-2">
+
+                    <!-- Checkboxes das colunas serão inseridos aqui -->
+
+                </ul>
+
+                <div class="border-t pt-4">
+
+                    <div class="flex items-center justify-between">
+
+                        <label for="export-sort-alpha" class="font-medium text-gray-800">Ordenar produtos
+                            alfabeticamente (A-Z)</label>
+
+                        <input type="checkbox" id="export-sort-alpha"
+                            class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+
+                <button id="generate-pdf-btn" type="button"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Gerar
+                    PDF</button>
+
+                <button id="cancel-export-btn" type="button"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Modal de Inclusão de Produto -->
+
+    <div id="add-product-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all">
+
+            <form id="add-product-form">
+
+                <div class="flex justify-between items-center p-4 border-b">
+
+                    <h3 class="text-xl font-semibold">Incluir Novo Produto</h3>
+
+                    <button type="button" id="cancel-add-product-btn-header" class="text-gray-500 hover:text-gray-800">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="x" class="lucide lucide-x">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                        </svg>
+
+                    </button>
+
+                </div>
+
+                <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+                    <div>
+
+                        <label id="add-ean-label" for="add-ean"
+                            class="block text-sm font-medium text-gray-700">EAN</label>
+
+                        <input type="text" name="ean" id="add-ean" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                    </div>
+
+                    <div>
+
+                        <label for="add-descricao" class="block text-sm font-medium text-gray-700">Nome do Produto /
+                            Descrição</label>
+
+                        <input type="text" name="descricao" id="add-descricao" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        <div>
+
+                            <label for="add-estoque" class="block text-sm font-medium text-gray-700">Estoque (Filial
+                                Padrão)</label>
+
+                            <input type="number" name="estoque" id="add-estoque" value="0" min="0"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                        </div>
+
+                        <div>
+
+                            <label for="add-ultima-entrada" class="block text-sm font-medium text-gray-700">Última
+                                Entrada (Qtde)</label>
+
+                            <input type="number" name="ultima-entrada" id="add-ultima-entrada" value="0" min="0"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                        </div>
+
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        <div id="add-custo-wrapper">
+
+                            <label for="add-custo" class="block text-sm font-medium text-gray-700">Custo Real</label>
+
+                            <input type="number" name="custo" id="add-custo" step="0.01" value="0" min="0"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                        </div>
+
+                        <div>
+
+                            <label for="add-sugestao" class="block text-sm font-medium text-gray-700">Quantidade
+                                Sugerida</label>
+
+                            <input type="number" name="sugestao" id="add-sugestao" required value="1" min="1"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+
+                    <button id="save-product-btn" type="submit"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Salvar
+                        Produto</button>
+
+                    <button id="cancel-add-product-btn" type="button"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
             lucide.createIcons();
 
-            const app = { 
-                uploadSection: document.getElementById('upload-section'), mainContent: document.getElementById('main-content'), 
-                reportInfo: document.getElementById('report-info'), searchInput: document.getElementById('search-input'), 
-                tabsContainer: document.querySelector('nav'), tablesContainer: document.getElementById('tables-container'), 
-                exportPdfBtn: document.getElementById('export-pdf-btn'), historyBtn: document.getElementById('history-btn'), 
-                historyModal: document.getElementById('history-modal'), closeHistoryModalBtn: document.getElementById('close-history-modal'), 
-                historyList: document.getElementById('history-list'), loader: document.getElementById('loader'), 
-                errorModal: document.getElementById('error-modal'), errorTitle: document.getElementById('error-title'), 
+            const app = {
+                // ... (outros elementos mantidos) ...
+                uploadSection: document.getElementById('upload-section'), mainContent: document.getElementById('main-content'),
+                reportInfo: document.getElementById('report-info'), searchInput: document.getElementById('search-input'),
+                tabsContainer: document.querySelector('nav'), tablesContainer: document.getElementById('tables-container'),
+                exportPdfBtn: document.getElementById('export-pdf-btn'), historyBtn: document.getElementById('history-btn'),
+                historyModal: document.getElementById('history-modal'), closeHistoryModalBtn: document.getElementById('close-history-modal'),
+                historyList: document.getElementById('history-list'), loader: document.getElementById('loader'),
+                errorModal: document.getElementById('error-modal'), errorTitle: document.getElementById('error-title'),
                 errorMessage: document.getElementById('error-message'), closeErrorModalBtn: document.getElementById('close-error-modal'),
                 confirmationModal: document.getElementById('confirmation-modal'), confirmContinueBtn: document.getElementById('confirm-continue-btn'),
                 confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
                 summarySection: document.getElementById('summary-section'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
-                fileUpload: document.getElementById('file-upload'), paginationControls: document.getElementById('pagination-controls')
+                fileUpload: document.getElementById('file-upload'), paginationControls: document.getElementById('pagination-controls'),
+                addProductBtn: document.getElementById('add-product-btn'),
+                addProductModal: document.getElementById('add-product-modal'),
+                addProductForm: document.getElementById('add-product-form'),
+                saveProductBtn: document.getElementById('save-product-btn'),
+                cancelAddProductBtn: document.getElementById('cancel-add-product-btn'),
+                cancelAddProductBtnHeader: document.getElementById('cancel-add-product-btn-header'),
+                addEanLabel: document.getElementById('add-ean-label'),
+                addCustoWrapper: document.getElementById('add-custo-wrapper'),
+
+                branchManagerBtn: document.getElementById('branch-manager-btn'),
+                branchManagerModal: document.getElementById('branch-manager-modal'),
+                closeBranchManagerModalBtn: document.getElementById('close-branch-manager-modal'),
+                addBranchForm: document.getElementById('add-branch-form'),
+                addBranchNameInput: document.getElementById('add-branch-name'),
+                branchList: document.getElementById('branch-list'),
+                transferPercentageInput: document.getElementById('transfer-percentage-input'),
+                saveSettingsBtn: document.getElementById('save-settings-btn'),
+                cancelSettingsBtn: document.getElementById('cancel-settings-btn'),
+
+                branchStockModal: document.getElementById('branch-stock-modal'),
+                closeBranchStockModalBtn: document.getElementById('close-branch-stock-modal'),
+                branchStockProductName: document.getElementById('branch-stock-product-name'),
+                branchStockList: document.getElementById('branch-stock-list'),
+                saveBranchStockBtn: document.getElementById('save-branch-stock-btn'),
+                cancelBranchStockBtn: document.getElementById('cancel-branch-stock-btn'),
+
+                // IDs Removidos/Substituídos para o Modal de Estoque por Filial
+                // branchStockTransferDetails: document.getElementById('branch-stock-transfer-details'),
+                // branchStockDailySale: document.getElementById('branch-stock-daily-sale'),
+                // branchStockTransferDays: document.getElementById('branch-stock-transfer-days'),
+                // branchStockTotalStock: document.getElementById('branch-stock-total-stock'),
+                // branchStockTransferSuggestion: document.getElementById('branch-stock-transfer-suggestion'),
+                // branchStockNoSaleWarning: document.getElementById('branch-stock-no-sale-warning'),
+
+                // Novos IDs para Status de Equilíbrio
+                branchBalanceContainer: document.getElementById('branch-balance-container'),
+                branchBalanceList: document.getElementById('branch-balance-list'),
+
+                exportOptionsModal: document.getElementById('export-options-modal'),
+                closeExportOptionsModalBtn: document.getElementById('close-export-options-modal'),
+                exportColumnList: document.getElementById('export-column-list'),
+                exportSortAlpha: document.getElementById('export-sort-alpha'),
+                cancelExportBtn: document.getElementById('cancel-export-btn'),
+                generatePdfBtn: document.getElementById('generate-pdf-btn')
             };
 
-            let state = { 
-                products: { toOrder: [], ordered: [], ignored: [] }, headerInfo: {}, activeTab: 'toOrder', 
-                searchTerm: '', sortConfig: { key: 'SUGESTAO', direction: 'descending' }, 
-                currentAnalysisId: null, pagination: { currentPage: 1, itemsPerPage: 25 }, idType: 'EAN'
+            let state = {
+                products: { toOrder: [], ordered: [], ignored: [] },
+                headerInfo: {
+                    hasSaleColumn: false,
+                    periodoDias: 0
+                },
+                activeTab: 'toOrder',
+                searchTerm: '', sortConfig: { key: 'SUGESTAO', direction: 'descending' },
+                currentAnalysisId: null, pagination: { currentPage: 1, itemsPerPage: 25 }, idType: 'EAN',
+                editingStockForProductId: null
             };
-            
-            let tempProcessData = {}; // Holds data while waiting for user confirmation
 
-            const showError = (title, message) => { app.loader.classList.add('hidden'); app.errorTitle.textContent = title; app.errorMessage.innerHTML = message; app.errorModal.classList.remove('hidden'); lucide.createIcons(); };
+            let tempProcessData = {};
+
+            // Constante de colunas de exportação atualizada
+            const ALL_EXPORT_COLUMNS = [
+                { key: 'IDENTIFIER', label: 'EAN/Cód. Interno', defaultChecked: true },
+                { key: 'DESCRICAO', label: 'Descrição', defaultChecked: true },
+                { key: 'ESTOQUE', label: 'Estoque Total', defaultChecked: true },
+                { key: 'BRANCHES', label: 'Estoque Filiais', defaultChecked: false },
+                // Nova Coluna Adicionada
+                { key: 'BRANCH_STATUS', label: 'Status Filiais', defaultChecked: false },
+                { key: 'ULTIMA_ENTRADA', label: 'Última Entrada (Qtde)', defaultChecked: true },
+                { key: 'SUGESTAO', label: 'Sugestão', defaultChecked: true },
+                { key: 'SUGESTAO_TRANSF', label: 'Sug. Transferência (Cobertura)', defaultChecked: false }, // Renomeado para clareza
+                { key: 'C_REAL', label: 'Custo Real', defaultChecked: true },
+                { key: 'COST_TOTAL', label: 'Custo Total', defaultChecked: true }
+            ];
+
+            const safeParseInt = (v, f = 0) => { const p = parseInt(String(v).trim(), 10); return isNaN(p) ? f : p; };
+            const safeParseFloat = (v, f = 0.0) => { const p = parseFloat(String(v).toString().trim().replace(',', '.')); return isNaN(p) ? f : p; };
+
+            // --- Novas Funções de Configuração Global ---
+
+            const getGlobalSettings = () => {
+                const defaults = { transferCalculationPercentage: 50 }; // Default 50%
+                const settings = localStorage.getItem('globalSettings');
+                if (settings) {
+                    try {
+                        return { ...defaults, ...JSON.parse(settings) };
+                    } catch (e) {
+                        console.error("Erro ao ler globalSettings:", e);
+                        return defaults;
+                    }
+                }
+                localStorage.setItem('globalSettings', JSON.stringify(defaults));
+                return defaults;
+            };
+
+            const saveGlobalSettings = (settings) => {
+                if (settings && typeof settings.transferCalculationPercentage !== 'undefined') {
+                    const validSettings = {
+                        transferCalculationPercentage: Math.max(0, safeParseInt(settings.transferCalculationPercentage, 50))
+                    };
+                    localStorage.setItem('globalSettings', JSON.stringify(validSettings));
+                } else {
+                    console.warn("Tentativa de salvar configurações globais inválidas:", settings);
+                }
+            };
+
+            const parsePeriodoDias = (periodoString) => {
+                if (!periodoString) return 0;
+                const diasMatch = periodoString.match(/(\d+)\s*DIAS/i);
+                if (diasMatch && diasMatch[1]) {
+                    return safeParseInt(diasMatch[1], 0);
+                }
+                const datasMatch = periodoString.match(/(\d{2}\/\d{2}\/\d{4})\s*A\s*(\d{2}\/\d{2}\/\d{4})/i);
+                if (datasMatch && datasMatch[1] && datasMatch[2]) {
+                    try {
+                        const [d1, m1, y1] = datasMatch[1].split('/');
+                        const [d2, m2, y2] = datasMatch[2].split('/');
+                        const dataInicio = new Date(`${y1}-${m1}-${d1}T00:00:00`);
+                        const dataFim = new Date(`${y2}-${m2}-${d2}T00:00:00`);
+                        if (!isNaN(dataInicio) && !isNaN(dataFim) && dataFim >= dataInicio) {
+                            const diffTime = Math.abs(dataFim - dataInicio);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            return diffDays > 0 ? diffDays : 0;
+                        }
+                    } catch (e) {
+                        console.error("Erro ao fazer parse das datas do período:", e); return 0;
+                    }
+                }
+                return 0;
+            };
+
+            /**
+             * Calcula a sugestão de transferência TOTAL (baseada em cobertura/vendas).
+             * @param {object} product - O objeto do produto.
+             */
+            const calculateCoverageTransferSuggestion = (product) => {
+                if (!product || !state.headerInfo || !state.headerInfo.periodoDias || !state.headerInfo.hasSaleColumn) {
+                    product.SUGESTAO_TRANSF = 0; // Guarda 0 se não pode calcular
+                    return;
+                }
+                const settings = getGlobalSettings();
+                const diasDoPeriodo = state.headerInfo.periodoDias;
+                const vendaDiariaMedia = (diasDoPeriodo > 0 && product.VENDA > 0) ? (product.VENDA / diasDoPeriodo) : 0;
+                const diasCobertura = diasDoPeriodo * (settings.transferCalculationPercentage / 100);
+                const necessidade = vendaDiariaMedia * diasCobertura;
+                product.SUGESTAO_TRANSF = Math.max(0, Math.round(necessidade - product.ESTOQUE));
+            };
+
+            /**
+             * Calcula o status de equilíbrio (excedente/défice) para cada filial.
+             * @param {object} product - O objeto do produto.
+             */
+            const calculateBranchBalanceStatus = (product) => {
+                if (!product || !product.branchStock) {
+                    product.branchStatus = {};
+                    return;
+                }
+                const branches = getGlobalBranches();
+                const numBranches = branches.length;
+                if (numBranches === 0) {
+                    product.branchStatus = {};
+                    return;
+                }
+
+                const totalStock = product.ESTOQUE;
+                const idealStockPerBranch = numBranches > 0 ? totalStock / numBranches : 0;
+                // Arredonda o ideal para evitar dízimas, mas guarda o original para cálculo preciso
+                const idealStockRounded = Math.round(idealStockPerBranch);
+
+                product.branchStatus = {}; // Reinicia o status
+
+                branches.forEach(branchName => {
+                    const currentStock = product.branchStock[branchName] ?? 0;
+                    // Usa o valor não arredondado para calcular a diferença
+                    const difference = currentStock - idealStockPerBranch;
+                    let status = 'balanced';
+                    // Considera equilibrado se a diferença for muito pequena (ex: < 0.5)
+                    if (difference > 0.5) {
+                        status = 'surplus';
+                    } else if (difference < -0.5) {
+                        status = 'deficit';
+                    }
+
+                    product.branchStatus[branchName] = {
+                        current: currentStock,
+                        ideal: idealStockRounded, // Mostra o ideal arredondado
+                        diff: Math.round(difference), // Mostra a diferença arredondada
+                        status: status
+                    };
+                });
+            };
+
+
+            // --- Funções Principais Modificadas ---
+
+            const showError = (title, message) => {
+                app.loader.classList.add('hidden');
+                app.errorTitle.textContent = title;
+                app.errorMessage.innerHTML = message;
+                app.errorModal.classList.remove('hidden');
+                lucide.createIcons();
+            };
             app.closeErrorModalBtn.addEventListener('click', () => app.errorModal.classList.add('hidden'));
-
-            const safeParseInt = (v, f=0) => { const p=parseInt(String(v).trim(),10); return isNaN(p)?f:p; };
-            const safeParseFloat = (v, f=0.0) => { const p=parseFloat(String(v).toString().trim().replace(',','.')); return isNaN(p)?f:p; };
 
             const handleFile = file => {
                 if (!file) return;
@@ -179,15 +991,15 @@
                     app.loader.classList.add('hidden');
                 }
             };
-            
-            const parseCSV = file => { 
-                Papa.parse(file, { 
-                    skipEmptyLines: true, 
-                    complete: r => { processData(r.data); app.loader.classList.add('hidden'); }, 
-                    error: e => { showError('Erro de Leitura', 'Não foi possível interpretar o ficheiro CSV.'); console.error(e); app.loader.classList.add('hidden'); } 
-                }); 
+
+            const parseCSV = file => {
+                Papa.parse(file, {
+                    skipEmptyLines: true,
+                    complete: r => { processData(r.data); app.loader.classList.add('hidden'); },
+                    error: e => { showError('Erro de Leitura', 'Não foi possível interpretar o ficheiro CSV.'); console.error(e); app.loader.classList.add('hidden'); }
+                });
             };
-            
+
             const parseXLS = file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -196,14 +1008,13 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[sheetName];
-                        // Corrected: Use `raw: false` to get formatted text, preventing scientific notation.
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
                         processData(jsonData);
                     } catch (err) {
                         showError('Erro ao Processar Excel', 'Ocorreu um erro ao ler o ficheiro. Verifique se não está corrompido.');
                         console.error(err);
                     } finally {
-                         app.loader.classList.add('hidden');
+                        app.loader.classList.add('hidden');
                     }
                 };
                 reader.onerror = (e) => {
@@ -215,16 +1026,32 @@
             };
 
             const resetToUploadView = () => {
-                app.mainContent.classList.add('hidden'); app.uploadSection.classList.remove('hidden');
-                state = { products: { toOrder:[],ordered:[],ignored:[]}, headerInfo:{}, activeTab:'toOrder', searchTerm:'', sortConfig:{key:'SUGESTAO',direction:'descending'}, currentAnalysisId:null, pagination:{currentPage:1,itemsPerPage:25}, idType: 'EAN'};
+                app.mainContent.classList.add('hidden');
+                app.uploadSection.classList.remove('hidden');
+                state = {
+                    products: { toOrder: [], ordered: [], ignored: [] },
+                    headerInfo: { hasSaleColumn: false, periodoDias: 0 }, // Reseta headerInfo
+                    activeTab: 'toOrder',
+                    searchTerm: '',
+                    sortConfig: { key: 'SUGESTAO', direction: 'descending' },
+                    currentAnalysisId: null,
+                    pagination: { currentPage: 1, itemsPerPage: 25 },
+                    idType: 'EAN',
+                    editingStockForProductId: null
+                };
                 app.searchInput.value = '';
+                app.reportInfo.innerHTML = '';
+                app.summarySection.innerHTML = '';
+                app.tablesContainer.querySelector('#toOrder-content').innerHTML = '';
+                app.tablesContainer.querySelector('#ordered-content').innerHTML = '';
+                app.tablesContainer.querySelector('#ignored-content').innerHTML = '';
+                app.paginationControls.innerHTML = '';
             };
 
             const processData = (data) => {
-                const COLUMN_SYNONYMS = {
+                const CORE_COLUMN_SYNONYMS = {
                     ean: ['CODIGO BARRAS', 'EAN', 'CÓD. BARRAS', 'GTIN'],
                     description: ['DESCRICAO', 'DESCRIÇÃO', 'PRODUTO', 'NOME DO PRODUTO', 'DESC'],
-                    stock: ['ESTOQUE', 'EST', 'F01', 'QTD', 'QUANTIDADE', 'SALDO'],
                     cost: ['C.REAL', 'CUSTO', 'PREÇO DE CUSTO', 'VL CUSTO', 'CUSTO REAL'],
                     sale: ['VENDA', 'VDA/', 'GIRO', 'VENDAS'],
                     suggestion: ['SUGESTAO', 'SUGEST.', 'SUG', 'QTD_SUGERIDA', 'SUGESTAO COMPRA'],
@@ -234,112 +1061,215 @@
                 const findHeaderRow = (data, synonyms) => {
                     let bestMatch = { score: 0, index: -1 };
                     const allSynonyms = new Set(Object.values(synonyms).flat());
-
-                    for (let i = 0; i < Math.min(data.length, 20); i++) {
+                    const stockSynonymsForHeader = ['ESTOQUE', 'EST', 'SALDO', 'QTD', 'QUANTIDADE', 'F01', 'F02'];
+                    stockSynonymsForHeader.forEach(s => allSynonyms.add(s));
+                    const maxRowsToCheck = Math.min(data.length, 20);
+                    for (let i = 0; i < maxRowsToCheck; i++) {
                         const row = data[i];
                         if (!Array.isArray(row) || row.length < 3) continue;
-                        
                         let score = 0;
                         const upperRow = row.map(cell => String(cell).trim().toUpperCase());
-                        
                         for (const synonym of allSynonyms) {
-                            if (upperRow.includes(synonym)) {
-                                score++;
-                            }
+                            if (upperRow.includes(synonym)) score++;
                         }
-
-                        if (score > bestMatch.score) {
-                            bestMatch = { score, index: i };
-                        }
+                        if (score > bestMatch.score) bestMatch = { score, index: i };
                     }
-                    return bestMatch.score > 2 ? bestMatch.index : -1;
+                    return bestMatch.score > 3 ? bestMatch.index : -1;
                 };
 
-                const headerRowIndex = findHeaderRow(data, COLUMN_SYNONYMS);
+                const headerRowIndex = findHeaderRow(data, CORE_COLUMN_SYNONYMS);
 
                 if (headerRowIndex === -1) {
-                    showError('Formato Inválido', 'Não foi possível identificar uma linha de cabeçalho válida no ficheiro. Verifique se as colunas têm nomes como EAN, DESCRICAO, ESTOQUE, etc.');
+                    showError('Formato Inválido', 'Não foi possível identificar uma linha de cabeçalho válida no ficheiro. Verifique se as colunas têm nomes reconhecíveis (EAN, DESCRICAO, SUGESTAO, etc.) e se há colunas de estoque (F01, F02, ESTOQUE...).');
                     return;
                 }
 
                 const mainHeaders = data[headerRowIndex].map(h => String(h).trim().toUpperCase());
                 const secondaryHeaders = headerRowIndex > 0 ? data[headerRowIndex - 1].map(h => String(h).trim().toUpperCase()) : [];
 
-                const findColIndex = (aliases) => {
-                    for (const headerSet of [mainHeaders, secondaryHeaders]) {
-                        for (const alias of aliases) {
-                            const index = headerSet.indexOf(alias);
-                            if (index !== -1) return index;
-                        }
+                const findColIndex = (aliases, headerSet = mainHeaders) => {
+                    for (const alias of aliases) {
+                        const index = headerSet.indexOf(alias);
+                        if (index !== -1) return index;
                     }
                     return -1;
                 };
 
                 const cols = {};
-                for (const key in COLUMN_SYNONYMS) {
-                    cols[key] = findColIndex(COLUMN_SYNONYMS[key]);
+                for (const key in CORE_COLUMN_SYNONYMS) {
+                    cols[key] = findColIndex(CORE_COLUMN_SYNONYMS[key], mainHeaders);
+                    if (cols[key] === -1 && secondaryHeaders.length > 0) {
+                        cols[key] = findColIndex(CORE_COLUMN_SYNONYMS[key], secondaryHeaders);
+                    }
                 }
-                
+
+                let stockColumns = [];
+                const stockBranchPattern = /^F(\d+)$/;
+                const generalStockSynonyms = ['ESTOQUE', 'EST', 'SALDO', 'QTD', 'QUANTIDADE'];
+                const secondaryStockContext = 'EST';
+
+                let foundFxxColumns = false;
+                mainHeaders.forEach((header, index) => {
+                    const match = header.match(stockBranchPattern);
+                    if (match) {
+                        if (secondaryHeaders.length === 0 || secondaryHeaders[index] === secondaryStockContext) {
+                            stockColumns.push({ index: index, name: header });
+                            foundFxxColumns = true;
+                        }
+                    }
+                });
+
+                if (!foundFxxColumns) {
+                    let foundGeneralStockIndex = -1;
+                    foundGeneralStockIndex = findColIndex(generalStockSynonyms, mainHeaders);
+                    if (foundGeneralStockIndex === -1 && secondaryHeaders.length > 0) {
+                        foundGeneralStockIndex = findColIndex(generalStockSynonyms, secondaryHeaders);
+                    }
+                    if (foundGeneralStockIndex !== -1) {
+                        const defaultBranchName = getGlobalBranches()[0];
+                        stockColumns.push({ index: foundGeneralStockIndex, name: defaultBranchName });
+                    }
+                }
+
+                if (stockColumns.length === 0) {
+                    showError('Coluna de Estoque não Encontrada', 'Não foi possível identificar nenhuma coluna de estoque no ficheiro (Ex: F01, F02, ESTOQUE, SALDO, etc.).');
+                    return;
+                }
+
+                cols.stockColumns = stockColumns;
+
+                cols.lastEntry = -1;
+                const lastEntryAliases = ['QTDE'];
+                const lastEntryContext = '[ULTIMA ENTRADA]';
+                if (secondaryHeaders.length > 0) {
+                    const index = findColIndex(lastEntryAliases, mainHeaders);
+                    if (index !== -1 && secondaryHeaders[index] === lastEntryContext) {
+                        cols.lastEntry = index;
+                    }
+                }
+                if (cols.lastEntry === -1) {
+                    cols.lastEntry = findColIndex(lastEntryAliases, mainHeaders);
+                    if (cols.lastEntry === -1 && secondaryHeaders.length > 0) {
+                        cols.lastEntry = findColIndex(lastEntryAliases, secondaryHeaders);
+                    }
+                }
+
                 if (cols.ean === -1 && cols.internalCode !== -1) {
                     tempProcessData = { data, cols, headerRowIndex };
                     app.confirmationModal.classList.remove('hidden');
                     lucide.createIcons();
-                    return; 
+                    return;
                 }
-
                 if (cols.ean === -1 && cols.internalCode === -1) {
                     showError('Colunas Essenciais em Falta', `Não foi possível encontrar uma coluna para <strong>EAN (Código de Barras)</strong> ou <strong>Código Interno</strong>.`);
                     return;
                 }
-                
-                finalizeProcessing(data, cols, headerRowIndex, false);
+
+                finalizeProcessing(data, cols, headerRowIndex, false, foundFxxColumns);
             };
 
-            const finalizeProcessing = (data, cols, headerRowIndex, useInternalCodeAsId) => {
+            const finalizeProcessing = (data, cols, headerRowIndex, useInternalCodeAsId, foundFxxColumns) => {
                 state.idType = useInternalCodeAsId ? 'CODIGO' : 'EAN';
                 const idColumn = useInternalCodeAsId ? cols.internalCode : cols.ean;
 
                 const findRowContaining = t => data.find(r => Array.isArray(r) && r.join(';').toUpperCase().includes(t.toUpperCase()));
                 const extractInfo = (r, x) => (r ? (r.join(';').match(x) || [])[1]?.trim() : 'Não identificado');
+
+                const periodoStr = extractInfo(findRowContaining('GIRO/SUGESTAO'), /PERIODO DE\s*(.*?)(?:;;|$)/i);
+                const diasDoPeriodo = parsePeriodoDias(periodoStr);
+
                 state.headerInfo = {
                     fornecedor: extractInfo(findRowContaining('FORNECEDOR:'), /FORNECEDOR:\s*\d+\s*-\s*(.*?)(?:;|$)/i),
-                    periodo: extractInfo(findRowContaining('GIRO/SUGESTAO'), /PERIODO DE\s*(.*?)(?:;;|$)/i)
+                    periodo: periodoStr,
+                    hasCostColumn: cols.cost !== -1,
+                    hasSaleColumn: cols.sale !== -1,
+                    periodoDias: diasDoPeriodo
                 };
-                
-                state.headerInfo.hasCostColumn = cols.cost !== -1;
-                const requiredCols = { description: cols.description, stock: cols.stock, suggestion: cols.suggestion};
-                const missing = Object.entries(requiredCols)
+
+                const requiredCoreCols = { description: cols.description, suggestion: cols.suggestion };
+                const missingCore = Object.entries(requiredCoreCols)
                     .filter(([key, value]) => value === -1)
-                    .map(([key]) => key);
-                
-                if (missing.length > 0) {
-                     showError('Colunas Essenciais em Falta', `Não foi possível encontrar as seguintes colunas no ficheiro: <strong>${missing.join(', ')}</strong>.`);
-                     return;
+                    .map(([key]) => CORE_COLUMN_SYNONYMS[key][0]);
+
+                if (missingCore.length > 0) {
+                    showError('Colunas Essenciais em Falta', `Não foi possível encontrar as seguintes colunas no ficheiro: <strong>${missingCore.join(', ')}</strong>.`);
+                    return;
+                }
+
+                let currentGlobalBranches = getGlobalBranches();
+                let newBranchesFoundInFile = [];
+                cols.stockColumns.forEach(sc => { newBranchesFoundInFile.push(sc.name); });
+                let updatedGlobalBranches = [...currentGlobalBranches];
+                let needsSaving = false;
+                if (foundFxxColumns) {
+                    if (currentGlobalBranches.length === 1 && currentGlobalBranches[0] === 'Principal') {
+                        updatedGlobalBranches = []; needsSaving = true;
+                    }
+                    newBranchesFoundInFile.forEach(branchName => {
+                        if (!updatedGlobalBranches.includes(branchName)) {
+                            updatedGlobalBranches.push(branchName); needsSaving = true;
+                        }
+                    });
+                } else {
+                    const branchUsed = newBranchesFoundInFile[0];
+                    if (branchUsed && !updatedGlobalBranches.includes(branchUsed)) {
+                        updatedGlobalBranches.push(branchUsed); needsSaving = true;
+                    }
+                }
+                if (updatedGlobalBranches.length === 0) { updatedGlobalBranches = ['Principal']; needsSaving = true; }
+                if (needsSaving) {
+                    saveGlobalBranches(updatedGlobalBranches);
+                    currentGlobalBranches = updatedGlobalBranches;
                 }
 
                 const products = data.slice(headerRowIndex + 1).map(row => {
                     const id = row[idColumn]?.toString().trim();
                     if (!id || id.length < 1) return null;
-
                     const suggestion = safeParseInt(row[cols.suggestion]);
                     if (suggestion <= 0) return null;
 
-                    return {
+                    let branchStock = {};
+                    let totalStock = 0;
+                    cols.stockColumns.forEach(stockColInfo => {
+                        const stockValue = safeParseInt(row[stockColInfo.index]);
+                        branchStock[stockColInfo.name] = stockValue;
+                        totalStock += stockValue;
+                    });
+                    currentGlobalBranches.forEach(branchName => {
+                        if (!(branchName in branchStock)) { branchStock[branchName] = 0; }
+                    });
+
+                    const venda = cols.sale !== -1 ? safeParseInt(row[cols.sale]) : 0;
+                    const estoqueTotal = totalStock;
+
+                    const newProduct = {
                         id: id,
                         IDENTIFIER: id,
                         DESCRICAO: row[cols.description]?.toString().trim() || 'S/D',
-                        ESTOQUE: safeParseInt(row[cols.stock]),
-                        VENDA: cols.sale !== -1 ? safeParseInt(row[cols.sale]) : 0,
+                        ESTOQUE: estoqueTotal,
+                        branchStock: branchStock,
+                        VENDA: venda,
                         SUGESTAO: suggestion,
                         C_REAL: state.headerInfo.hasCostColumn ? safeParseFloat(row[cols.cost]) : 0,
+                        ULTIMA_ENTRADA: cols.lastEntry !== -1 ? safeParseInt(row[cols.lastEntry]) : 0,
+                        SUGESTAO_TRANSF: 0, // Será calculado depois
+                        branchStatus: {} // Será calculado depois
                     };
+
+                    // Calcula os dois valores após criar o objeto
+                    calculateCoverageTransferSuggestion(newProduct);
+                    calculateBranchBalanceStatus(newProduct);
+
+                    return newProduct;
+
                 }).filter(p => p !== null);
+
 
                 if (products.length === 0) {
                     showError('Nenhum Produto Válido', `Nenhum produto com sugestão de compra (> 0) e ${state.idType} válido foi encontrado no ficheiro.`);
                     return;
                 }
-                
+
                 state.products = { toOrder: products, ordered: [], ignored: [] };
                 state.currentAnalysisId = `analysis_${Date.now()}`;
                 saveState();
@@ -348,162 +1278,544 @@
                 app.mainContent.classList.remove('hidden');
             };
 
-            const saveState=()=>{if(!state.currentAnalysisId)return;localStorage.setItem(state.currentAnalysisId,JSON.stringify(state));let i=JSON.parse(localStorage.getItem('analyses_index'))||[];if(!i.some(t=>t.id===state.currentAnalysisId))i.unshift({id:state.currentAnalysisId,date:new Date().toISOString(),fornecedor:state.headerInfo.fornecedor});if(i.length>20){i.slice(20).forEach(t=>localStorage.removeItem(t.id));i=i.slice(0,20);}localStorage.setItem('analyses_index',JSON.stringify(i));};
-            const loadState=id=>{const s=localStorage.getItem(id);if(s){state=JSON.parse(s);render();app.uploadSection.classList.add('hidden');app.mainContent.classList.remove('hidden');return true;}return false;};
-            const moveItem=(id,from,to)=>{const i=state.products[from].findIndex(p=>p.id===id);if(i>-1){const[item]=state.products[from].splice(i,1);state.products[to].unshift(item);saveState();render();}};
-            const updateQuantity=(id,qty)=>{const i=state.products.toOrder.find(p=>p.id===id);if(i){i.SUGESTAO=qty;saveState();renderSummary();}};
+            const saveState = () => {
+                if (!state.currentAnalysisId) return;
+                localStorage.setItem(state.currentAnalysisId, JSON.stringify(state));
+                let index = JSON.parse(localStorage.getItem('analyses_index')) || [];
+                const existingIndex = index.findIndex(entry => entry.id === state.currentAnalysisId);
+                const newEntry = {
+                    id: state.currentAnalysisId,
+                    date: new Date().toISOString(),
+                    fornecedor: state.headerInfo.fornecedor || 'Desconhecido'
+                };
+                if (existingIndex > -1) { index[existingIndex] = newEntry; } else { index.unshift(newEntry); }
+                if (index.length > 20) {
+                    const removed = index.splice(20);
+                    removed.forEach(entry => localStorage.removeItem(entry.id));
+                }
+                localStorage.setItem('analyses_index', JSON.stringify(index));
+            };
 
-            const render=()=>{renderReportInfo();renderSummary();renderTabs();renderTable();updateCounts();lucide.createIcons();};
-            const renderReportInfo=()=>{app.reportInfo.innerHTML=`<h2 class="text-xl font-semibold text-gray-800">Detalhes da Análise</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-sm"><div><strong>Fornecedor:</strong> <span class="text-gray-600">${state.headerInfo.fornecedor}</span></div><div><strong>Período de Análise:</strong> <span class="text-gray-600">${state.headerInfo.periodo}</span></div></div>`;};
-            const renderTabs=()=>{document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('tab-active');if(b.dataset.tab===state.activeTab)b.classList.add('tab-active');});document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));document.getElementById(`${state.activeTab}-content`).classList.remove('hidden');app.exportPdfBtn.disabled=state.activeTab!=='toOrder'||state.products.toOrder.length===0;};
-            const updateCounts=()=>{document.getElementById('toOrder-count').textContent=state.products.toOrder.length;document.getElementById('ordered-count').textContent=state.products.ordered.length;document.getElementById('ignored-count').textContent=state.products.ignored.length;};
-            const renderSummary=()=>{const p=state.products,h=state.headerInfo.hasCostColumn,c=p.toOrder.reduce((s,i)=>s+(i.SUGESTAO*i.C_REAL),0),d=h?c.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):`<span class="text-lg" title="Coluna C.REAL não encontrada">N/D</span>`;app.summarySection.innerHTML=`<div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="h-6 w-6 text-blue-600"></i></div><div><p class="text-gray-500 text-sm">Itens a Pedir</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.length}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="h-6 w-6 text-green-600"></i></div><div><p class="text-gray-500 text-sm">Total de Unidades</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.reduce((s,i)=>s+i.SUGESTAO,0)}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="h-6 w-6 text-yellow-600"></i></div><div><p class="text-gray-500 text-sm">Custo Estimado</p><p class="text-2xl font-bold text-gray-800">${d}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i></div><div><p class="text-gray-500 text-sm">Itens Ignorados</p><p class="text-2xl font-bold text-gray-800">${p.ignored.length}</p></div></div>`;lucide.createIcons();};
-            
-            const renderTable=()=>{const c=document.getElementById(`${state.activeTab}-content`);let d=[...state.products[state.activeTab]];if(state.searchTerm){const s=state.searchTerm.toLowerCase();d=d.filter(p=>p.DESCRICAO.toLowerCase().includes(s)||p.IDENTIFIER.includes(s));}d.sort((a,b)=>{const vA=a[state.sortConfig.key],vB=b[state.sortConfig.key];let c=0;if(typeof vA==='string')c=vA.localeCompare(vB);else c=(vA>vB)?1:((vA<vB)?-1:0);return state.sortConfig.direction==='ascending'?c:-c;});const {currentPage,itemsPerPage}=state.pagination;const tP=itemsPerPage===0?1:Math.ceil(d.length/itemsPerPage);const pD=itemsPerPage===0?d:d.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);if(pD.length===0){c.innerHTML=`<div class="p-8 text-center text-gray-500">Nenhum item encontrado.</div>`;app.paginationControls.innerHTML='';return;}c.innerHTML=createTableHTML(pD);renderPaginationControls(d.length);lucide.createIcons();};
-            
+            const loadState = id => {
+                const savedState = localStorage.getItem(id);
+                if (savedState) {
+                    try {
+                        const parsedState = JSON.parse(savedState);
+                        if (parsedState && parsedState.products && parsedState.products.toOrder) {
+                            state = parsedState;
+                            if (!state.headerInfo) state.headerInfo = {};
+                            if (!state.headerInfo.periodoDias) {
+                                state.headerInfo.periodoDias = parsePeriodoDias(state.headerInfo.periodo);
+                            }
+                            if (typeof state.headerInfo.hasSaleColumn === 'undefined') {
+                                const hasSale = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored].some(p => p.VENDA > 0);
+                                state.headerInfo.hasSaleColumn = hasSale;
+                            }
+                            const currentGlobalBranches = getGlobalBranches();
+                            const allLoadedProducts = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored];
+                            allLoadedProducts.forEach(product => {
+                                if (!product.branchStock) product.branchStock = {};
+                                currentGlobalBranches.forEach(branchName => {
+                                    if (!(branchName in product.branchStock)) { product.branchStock[branchName] = 0; }
+                                });
+                                Object.keys(product.branchStock).forEach(productBranch => {
+                                    if (!currentGlobalBranches.includes(productBranch)) { delete product.branchStock[productBranch]; }
+                                });
+                                recalculateProductTotalStock(product);
+                                // Calcula ambos os valores ao carregar
+                                calculateCoverageTransferSuggestion(product);
+                                calculateBranchBalanceStatus(product);
+                            });
+                            render();
+                            app.uploadSection.classList.add('hidden');
+                            app.mainContent.classList.remove('hidden');
+                            return true;
+                        } else { throw new Error("Estado salvo inválido."); }
+                    } catch (e) {
+                        console.error("Erro ao carregar estado salvo:", e);
+                        showError("Erro ao Carregar", "Não foi possível carregar a análise anterior. Pode estar corrompida.");
+                        localStorage.removeItem(id);
+                        let index = JSON.parse(localStorage.getItem('analyses_index')) || [];
+                        index = index.filter(entry => entry.id !== id);
+                        localStorage.setItem('analyses_index', JSON.stringify(index));
+                        resetToUploadView(); return false;
+                    }
+                }
+                return false;
+            };
+
+            const moveItem = (id, fromList, toList) => {
+                const index = state.products[fromList].findIndex(p => p.id === id);
+                if (index > -1) {
+                    const [item] = state.products[fromList].splice(index, 1);
+                    state.products[toList].unshift(item);
+                    saveState();
+                    render();
+                }
+            };
+
+            const updateQuantity = (id, quantity) => {
+                const product = state.products.toOrder.find(p => p.id === id);
+                if (product) {
+                    product.SUGESTAO = quantity < 0 ? 0 : quantity;
+                    saveState();
+                    renderSummary();
+                }
+            };
+
+            const updateLastEntry = (id, value) => {
+                const product = state.products.toOrder.find(p => p.id === id);
+                if (product) {
+                    product.ULTIMA_ENTRADA = value < 0 ? 0 : value;
+                    saveState();
+                }
+            };
+
+            const updateDescription = (id, newDescription) => {
+                let product = findProductById(id);
+                if (product) {
+                    product.DESCRICAO = newDescription;
+                    saveState();
+                }
+            };
+
+            const getGlobalBranches = () => {
+                const branches = localStorage.getItem('globalBranches');
+                if (branches) {
+                    try {
+                        const parsed = JSON.parse(branches);
+                        if (Array.isArray(parsed) && parsed.length > 0) { return parsed; }
+                    } catch (e) {
+                        console.error("Erro ao ler filiais globais do localStorage:", e);
+                        localStorage.removeItem('globalBranches');
+                    }
+                }
+                const defaultBranches = ['Principal'];
+                saveGlobalBranches(defaultBranches);
+                return defaultBranches;
+            };
+
+            const saveGlobalBranches = (branches) => {
+                if (Array.isArray(branches) && branches.length > 0) {
+                    const uniqueBranches = [...new Set(branches)];
+                    localStorage.setItem('globalBranches', JSON.stringify(uniqueBranches));
+                } else {
+                    console.warn("Tentativa de salvar lista de filiais inválida:", branches);
+                    localStorage.setItem('globalBranches', JSON.stringify(['Principal']));
+                }
+            };
+
+            const findProductById = (id) => {
+                for (const listName of ['toOrder', 'ordered', 'ignored']) {
+                    const product = state.products[listName].find(p => p.id === id);
+                    if (product) return product;
+                }
+                return null;
+            };
+
+            const recalculateProductTotalStock = (product) => {
+                if (!product) return;
+                if (!product.branchStock) { product.ESTOQUE = 0; return; };
+                const totalStock = Object.values(product.branchStock).reduce((sum, stock) => sum + safeParseInt(stock), 0);
+                product.ESTOQUE = totalStock;
+            };
+
+            const render = () => { renderReportInfo(); renderSummary(); renderTabs(); renderTable(); updateCounts(); lucide.createIcons(); };
+            const renderReportInfo = () => { app.reportInfo.innerHTML = `<h2 class="text-xl font-semibold text-gray-800">Detalhes da Análise</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-sm"><div><strong>Fornecedor:</strong> <span class="text-gray-600">${state.headerInfo.fornecedor || 'N/A'}</span></div><div><strong>Período de Análise:</strong> <span class="text-gray-600">${state.headerInfo.periodo || 'N/A'} (${state.headerInfo.periodoDias} dias)</span></div></div>`; };
+            const renderTabs = () => { document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); if (b.dataset.tab === state.activeTab) b.classList.add('tab-active'); }); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); document.getElementById(`${state.activeTab}-content`).classList.remove('hidden'); app.exportPdfBtn.disabled = state.activeTab !== 'toOrder' || state.products.toOrder.length === 0; };
+            const updateCounts = () => { document.getElementById('toOrder-count').textContent = state.products.toOrder.length; document.getElementById('ordered-count').textContent = state.products.ordered.length; document.getElementById('ignored-count').textContent = state.products.ignored.length; };
+            const renderSummary = () => { const p = state.products, h = state.headerInfo.hasCostColumn, cost = p.toOrder.reduce((s, i) => s + (i.SUGESTAO * i.C_REAL), 0), displayCost = h ? cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : `<span class="text-lg" title="Coluna C.REAL não encontrada">N/D</span>`; const totalUnits = p.toOrder.reduce((s, i) => s + i.SUGESTAO, 0); app.summarySection.innerHTML = `<div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="h-6 w-6 text-blue-600"></i></div><div><p class="text-gray-500 text-sm">Itens a Pedir</p><p class="text-2xl font-bold text-gray-800">${p.toOrder.length}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="h-6 w-6 text-green-600"></i></div><div><p class="text-gray-500 text-sm">Total de Unidades</p><p class="text-2xl font-bold text-gray-800">${totalUnits}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="h-6 w-6 text-yellow-600"></i></div><div><p class="text-gray-500 text-sm">Custo Estimado</p><p class="text-2xl font-bold text-gray-800">${displayCost}</p></div></div><div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="trash-2" class="h-6 w-6 text-red-600"></i></div><div><p class="text-gray-500 text-sm">Itens Ignorados</p><p class="text-2xl font-bold text-gray-800">${p.ignored.length}</p></div></div>`; lucide.createIcons(); };
+
+            const renderTable = () => {
+                const container = document.getElementById(`${state.activeTab}-content`);
+                let dataToDisplay = [...state.products[state.activeTab]];
+                if (state.searchTerm) {
+                    const searchTermLower = state.searchTerm.toLowerCase();
+                    dataToDisplay = dataToDisplay.filter(p => p.DESCRICAO.toLowerCase().includes(searchTermLower) || p.IDENTIFIER.includes(searchTermLower));
+                }
+                dataToDisplay.sort((a, b) => {
+                    const valueA = a[state.sortConfig.key] ?? (typeof a[state.sortConfig.key] === 'string' ? '' : 0);
+                    const valueB = b[state.sortConfig.key] ?? (typeof b[state.sortConfig.key] === 'string' ? '' : 0);
+                    let comparison = 0;
+                    if (typeof valueA === 'string' && typeof valueB === 'string') { comparison = valueA.localeCompare(valueB); }
+                    else if (typeof valueA === 'number' && typeof valueB === 'number') { comparison = valueA - valueB; }
+                    else { comparison = String(valueA).localeCompare(String(valueB)); }
+                    return state.sortConfig.direction === 'ascending' ? comparison : -comparison;
+                });
+                const { currentPage, itemsPerPage } = state.pagination;
+                const totalItemsForPagination = dataToDisplay.length;
+                const totalPages = itemsPerPage === 0 ? 1 : Math.ceil(totalItemsForPagination / itemsPerPage);
+                let adjustedCurrentPage = currentPage;
+                if (adjustedCurrentPage > totalPages && totalPages > 0) { adjustedCurrentPage = totalPages; state.pagination.currentPage = adjustedCurrentPage; }
+                else if (adjustedCurrentPage < 1) { adjustedCurrentPage = 1; state.pagination.currentPage = adjustedCurrentPage; }
+                const paginatedData = itemsPerPage === 0 ? dataToDisplay : dataToDisplay.slice((adjustedCurrentPage - 1) * itemsPerPage, adjustedCurrentPage * itemsPerPage);
+                if (paginatedData.length === 0) {
+                    container.innerHTML = `<div class="p-8 text-center text-gray-500">Nenhum item encontrado${state.searchTerm ? ' para "' + state.searchTerm + '"' : ''}.</div>`;
+                    app.paginationControls.innerHTML = ''; return;
+                }
+                container.innerHTML = createTableHTML(paginatedData);
+                renderPaginationControls(totalItemsForPagination, adjustedCurrentPage, totalPages);
+                lucide.createIcons();
+            };
+
             const createTableHTML = data => {
                 const idHeaderLabel = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno';
-                const headers = { 'IDENTIFIER': idHeaderLabel, 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'C_REAL': 'Custo Real', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
-                const getSortIcon = key => { if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`; return state.sortConfig.direction === 'ascending' ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`; };
-                const headerHTML = Object.entries(headers).map(([key, value]) => { const isSortable = key !== 'AÇÕES'; return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}><div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div></th>`; }).join('');
+                const headers = { 'IDENTIFIER': idHeaderLabel, 'DESCRICAO': 'Descrição', 'ESTOQUE': 'Estoque', 'ULTIMA_ENTRADA': 'Últ. Entrada (Qtde)', 'C_REAL': 'Custo Real', 'SUGESTAO': 'Sugestão', 'AÇÕES': 'Ações' };
+                const getSortIcon = key => {
+                    if (state.sortConfig.key !== key) return `<i data-lucide="chevrons-up-down" class="h-4 w-4 text-gray-400 ml-1"></i>`;
+                    return state.sortConfig.direction === 'ascending' ? `<i data-lucide="chevron-up" class="h-4 w-4 text-blue-600 ml-1"></i>` : `<i data-lucide="chevron-down" class="h-4 w-4 text-blue-600 ml-1"></i>`;
+                };
+                const headerHTML = Object.entries(headers).map(([key, value]) => {
+                    const isSortable = key !== 'AÇÕES'; const titleHint = isSortable ? ` title="Ordenar por ${value}"` : '';
+                    return `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${isSortable ? 'table-header-sortable' : ''}" ${isSortable ? `data-sort-key="${key}"` : ''}${titleHint}><div class="flex items-center">${value}${isSortable ? getSortIcon(key) : ''}</div></th>`;
+                }).join('');
                 const rowsHTML = data.map(item => {
                     let actionsHTML;
-                    if (state.activeTab === 'toOrder') { actionsHTML = `<div class="action-buttons"><button data-action="mark-ordered" data-id="${item.id}" title="Marcar como Pedido" class="text-green-600 hover:text-green-800 transition-colors"><i data-lucide="check-circle-2" class="h-6 w-6"></i></button><button data-action="mark-ignored" data-id="${item.id}" title="Ignorar Item" class="text-red-600 hover:text-red-800 transition-colors"><i data-lucide="x-circle" class="h-6 w-6"></i></button></div>`; } else { actionsHTML = `<button data-action="undo" data-id="${item.id}" title="Desfazer" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="undo-2" class="h-6 w-6"></i></button>`; }
+                    const branchStockBtn = `<button data-action="manage-stock" data-id="${item.id}" title="Gerir Estoque e Equilíbrio" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="building" class="h-6 w-6"></i></button>`; // Title alterado
+                    if (state.activeTab === 'toOrder') {
+                        actionsHTML = `<div class="action-buttons flex items-center justify-end gap-3"><button data-action="mark-ordered" data-id="${item.id}" title="Marcar como Pedido" class="text-green-600 hover:text-green-800 transition-colors"><i data-lucide="check-circle-2" class="h-6 w-6"></i></button><button data-action="mark-ignored" data-id="${item.id}" title="Ignorar Item" class="text-red-600 hover:text-red-800 transition-colors"><i data-lucide="x-circle" class="h-6 w-6"></i></button>${branchStockBtn}</div>`;
+                    } else {
+                        actionsHTML = `<div class="action-buttons flex items-center justify-end gap-3"><button data-action="undo" data-id="${item.id}" title="Desfazer" class="text-blue-600 hover:text-blue-800 transition-colors"><i data-lucide="undo-2" class="h-6 w-6"></i></button>${branchStockBtn}</div>`;
+                    }
                     const suggestionHTML = state.activeTab === 'toOrder' ? `<input type="number" class="w-24 p-1 border rounded-md text-center font-bold text-blue-700 bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500" value="${item.SUGESTAO}" data-id="${item.id}" min="0">` : `<span class="font-bold text-gray-800">${item.SUGESTAO}</span>`;
-                    const isNegativeStock = item.ESTOQUE < 0;
-                    const stockWarningIcon = isNegativeStock ? `<i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 inline-block mr-1" title="Estoque negativo!"></i>` : '';
-                    const stockClass = isNegativeStock ? 'font-bold text-red-600' : 'text-gray-500';
-                    const costHTML = state.headerInfo.hasCostColumn ? item.C_REAL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/D';
+                    const lastEntryValue = safeParseInt(item.ULTIMA_ENTRADA);
+                    const lastEntryHTML = state.activeTab === 'toOrder' ? `<input type="number" class="w-24 p-1 border rounded-md text-center text-gray-700 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500" value="${lastEntryValue}" data-id="${item.id}" data-field="last-entry" min="0">` : `<span class="font-bold text-gray-800">${lastEntryValue}</span>`;
+                    const stockValue = item.ESTOQUE ?? 0; const isNegativeStock = stockValue < 0; const stockWarningIcon = isNegativeStock ? `<i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 inline-block mr-1" title="Estoque negativo!"></i>` : ''; const stockClass = isNegativeStock ? 'font-bold text-red-600' : 'text-gray-500';
+                    const costValue = item.C_REAL ?? 0; const costHTML = state.headerInfo.hasCostColumn ? costValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/D';
                     const rowClass = isNegativeStock ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50';
-                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}">
-                                <td data-label="${idHeaderLabel}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.IDENTIFIER}</td>
-                                <td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${item.DESCRICAO}</td>
-                                <td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center justify-end md:justify-start ${stockClass}">${stockWarningIcon}${item.ESTOQUE}</div></td>
-                                <td data-label="Custo Real" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">${costHTML}</td>
-                                <td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td>
-                                <td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td>
-                            </tr>`;
+                    const branchStockTooltip = item.branchStock ? Object.entries(item.branchStock).map(([name, qty]) => `${name}: ${safeParseInt(qty)}`).join(' | ') : 'Nenhuma filial definida';
+                    const stockTotalHTML = `<div class="flex items-center justify-end md:justify-start ${stockClass}" title="${branchStockTooltip}">${stockWarningIcon}${stockValue}</div>`;
+                    const descriptionHTML = `<span data-action="edit-desc" data-id="${item.id}" class="cursor-pointer hover:bg-yellow-100 p-1 rounded transition-colors" title="Clique para editar">${item.DESCRICAO}</span>`;
+                    return `<tr class="border-t border-gray-200 transition-colors ${rowClass}"><td data-label="${idHeaderLabel}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${item.IDENTIFIER}</td><td data-label="Descrição" class="px-6 py-4 text-sm text-gray-900">${descriptionHTML}</td><td data-label="Estoque" class="px-6 py-4 whitespace-nowrap text-sm">${stockTotalHTML}</td><td data-label="Últ. Entrada (Qtde)" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${lastEntryHTML}</td><td data-label="Custo Real" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">${costHTML}</td><td data-label="Sugestão" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestionHTML}</td><td data-label="Ações" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsHTML}</td></tr>`;
                 }).join('');
                 return `<table class="min-w-full responsive-table"><thead class="bg-gray-50"><tr>${headerHTML}</tr></thead><tbody class="bg-white divide-y divide-gray-200">${rowsHTML}</tbody></table>`;
             };
 
-            const renderPaginationControls = totalItems => {
-                const { currentPage, itemsPerPage } = state.pagination;
+            const renderPaginationControls = (totalItems, currentPage, totalPages) => {
+                const { itemsPerPage } = state.pagination;
                 if (itemsPerPage === 0 || totalItems <= itemsPerPage) { app.paginationControls.innerHTML = ''; return; }
-                const totalPages = Math.ceil(totalItems / itemsPerPage);
-                const prevDisabled = currentPage === 1 ? 'disabled' : '';
-                const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-                app.paginationControls.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <label for="items-per-page" class="text-sm font-medium text-gray-700">Itens por página:</label>
-                        <select id="items-per-page" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
-                            <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
-                            <option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option>
-                            <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
-                            <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
-                             <option value="0" ${itemsPerPage === 0 ? 'selected' : ''}>Todos</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm text-gray-700">Página ${currentPage} de ${totalPages}</span>
-                        <div class="inline-flex rounded-md shadow-sm" role="group">
-                            <button id="prev-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${prevDisabled}><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
-                            <button id="next-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${nextDisabled}><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
-                        </div>
-                    </div>`;
+                const prevDisabled = currentPage === 1 ? 'disabled' : ''; const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+                app.paginationControls.innerHTML = `<div class="flex items-center gap-2"><label for="items-per-page" class="text-sm font-medium text-gray-700">Itens por página:</label><select id="items-per-page" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2"><option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option><option value="25" ${itemsPerPage === 25 ? 'selected' : ''}>25</option><option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option><option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option><option value="0" ${itemsPerPage === 0 ? 'selected' : ''}>Todos</option></select></div><div class="flex items-center gap-4"><span class="text-sm text-gray-700">Página ${currentPage} de ${totalPages}</span><div class="inline-flex rounded-md shadow-sm" role="group"><button id="prev-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${prevDisabled}><i data-lucide="chevron-left" class="h-4 w-4"></i></button><button id="next-page" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" ${nextDisabled}><i data-lucide="chevron-right" class="h-4 w-4"></i></button></div></div>`;
                 lucide.createIcons();
             };
 
-            const renderHistory=()=>{const i=JSON.parse(localStorage.getItem('analyses_index'))||[];if(i.length===0){app.historyList.innerHTML=`<p class="text-gray-500 text-center">Nenhuma análise anterior encontrada.</p>`;return;}app.historyList.innerHTML=i.map(t=>`<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-lg hover:bg-gray-100 gap-3"><div><p class="font-semibold text-gray-800">${t.fornecedor}</p><p class="text-sm text-gray-500">${new Date(t.date).toLocaleString('pt-BR')}</p></div><div class="flex items-center gap-2 flex-shrink-0"><button data-action="load-history" data-id="${t.id}" class="bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200 transition-colors">Carregar</button><button data-action="delete-history" data-id="${t.id}" class="bg-red-100 text-red-700 font-semibold py-1 px-3 rounded-md hover:bg-red-200 transition-colors">Excluir</button></div></div>`).join('');};
+            const renderHistory = () => {
+                const index = JSON.parse(localStorage.getItem('analyses_index')) || [];
+                if (index.length === 0) { app.historyList.innerHTML = `<p class="text-gray-500 text-center">Nenhuma análise anterior encontrada.</p>`; return; }
+                app.historyList.innerHTML = index.map(entry => `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-lg hover:bg-gray-100 gap-3"><div><p class="font-semibold text-gray-800">${entry.fornecedor || 'Desconhecido'}</p><p class="text-sm text-gray-500">${new Date(entry.date).toLocaleString('pt-BR')}</p></div><div class="flex items-center gap-2 flex-shrink-0"><button data-action="load-history" data-id="${entry.id}" class="bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200 transition-colors">Carregar</button><button data-action="delete-history" data-id="${entry.id}" class="bg-red-100 text-red-700 font-semibold py-1 px-3 rounded-md hover:bg-red-200 transition-colors">Excluir</button></div></div>`).join('');
+            };
 
-            // Event Listeners
-            app.newAnalysisBtn.addEventListener('click',()=>{if(!app.mainContent.classList.contains('hidden')){resetToUploadView();}else{app.fileUpload.click();}});
-            app.uploadSection.addEventListener('click',()=>app.fileUpload.click());
-            app.fileUpload.addEventListener('change',e=>{const f=e.target.files[0];if(f)handleFile(f);e.target.value=null;});
-            ['dragenter','dragover','dragleave','drop'].forEach(e=>{app.uploadSection.addEventListener(e,p=>{p.preventDefault();p.stopPropagation();},false);});
-            ['dragenter','dragover'].forEach(e=>{app.uploadSection.addEventListener(e,()=>app.uploadSection.classList.add('dragging-over'),false);});
-            ['dragleave','drop'].forEach(e=>{app.uploadSection.addEventListener(e,()=>app.uploadSection.classList.remove('dragging-over'),false);});
-            app.uploadSection.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)handleFile(f);},false);
-            app.tabsContainer.addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(b){state.activeTab=b.dataset.tab;state.pagination.currentPage=1;render();}});
-            app.searchInput.addEventListener('input',e=>{state.searchTerm=e.target.value;state.pagination.currentPage=1;renderTable();});
-            app.tablesContainer.addEventListener('click',e=>{const t=e.target,b=t.closest('button'),h=t.closest('.table-header-sortable');if(b){const a=b.dataset.action,i=b.dataset.id;if(a==='mark-ordered')moveItem(i,'toOrder','ordered');if(a==='mark-ignored')moveItem(i,'toOrder','ignored');if(a==='undo')moveItem(i,state.activeTab,'toOrder');}else if(h){const k=h.dataset.sortKey,isAsc=state.sortConfig.key===k&&state.sortConfig.direction==='ascending';state.sortConfig={key:k,direction:isAsc?'descending':'ascending'};renderTable();}});
-            app.tablesContainer.addEventListener('change',e=>{if(e.target.type==='number'){const id=e.target.dataset.id,qty=parseInt(e.target.value,10);if(!isNaN(qty))updateQuantity(id,qty);}});
-            
-            app.exportPdfBtn.addEventListener('click', () => {
+            const openExportOptionsModal = () => {
+                app.exportColumnList.innerHTML = '';
+                const hasCostData = state.headerInfo.hasCostColumn || state.products.toOrder.some(p => p.C_REAL > 0);
+                const hasSaleData = state.headerInfo.hasSaleColumn;
+                const branches = getGlobalBranches();
+                const hasMultipleBranches = branches.length > 1;
+
+                ALL_EXPORT_COLUMNS.forEach(col => {
+                    let colLabel = col.label;
+                    if (col.key === 'IDENTIFIER') { colLabel = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno'; }
+                    let isChecked = col.defaultChecked;
+                    if ((col.key === 'C_REAL' || col.key === 'COST_TOTAL') && !hasCostData) { isChecked = false; }
+                    let disabledAttr = '';
+                    if (col.key === 'BRANCHES' && !hasMultipleBranches) {
+                        isChecked = false; disabledAttr = ' disabled title="Nenhuma filial adicional encontrada ou configurada."';
+                    }
+                    // Desativa Status Filiais se não houver múltiplas filiais
+                    if (col.key === 'BRANCH_STATUS' && !hasMultipleBranches) {
+                        isChecked = false; disabledAttr = ' disabled title="Necessário mais de uma filial para calcular o status."';
+                    }
+                    // Desativa Sug. Transferência (Cobertura) se não houver dados de Venda ou Período
+                    if (col.key === 'SUGESTAO_TRANSF' && (!hasSaleData || !state.headerInfo.periodoDias)) {
+                        isChecked = false; disabledAttr = ' disabled title="Coluna VENDA (Giro) ou Período não encontrado no ficheiro original. Cálculo indisponível."';
+                    }
+                    const li = document.createElement('li');
+                    li.className = `flex items-center justify-between p-2 bg-gray-50 rounded-md ${disabledAttr ? 'opacity-50' : ''}`;
+                    li.innerHTML = `<label for="col-${col.key}" class="font-medium text-gray-800 ${disabledAttr ? 'cursor-not-allowed' : ''}">${colLabel}</label><input type="checkbox" id="col-${col.key}" data-key="${col.key}" data-label="${colLabel}" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" ${isChecked ? 'checked' : ''}${disabledAttr}>`;
+                    app.exportColumnList.appendChild(li);
+                });
+                app.exportSortAlpha.checked = false;
+                app.exportOptionsModal.classList.remove('hidden');
+            };
+            const closeExportOptionsModal = () => app.exportOptionsModal.classList.add('hidden');
+
+            const generateCustomPdf = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                const hasCost = state.headerInfo.hasCostColumn;
-                const idHeaderLabel = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno';
-                
-                doc.setFontSize(18);
-                doc.text("Sugestão de Pedido", 14, 22);
-                doc.setFontSize(11);
-                doc.setTextColor(100);
-                doc.text(`Fornecedor: ${state.headerInfo.fornecedor}`, 14, 30);
-                doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 36);
-                
-                const tableHeaders = [idHeaderLabel, 'Descrição', 'Qtd. a Pedir'];
-                if(hasCost) {
-                    tableHeaders.push('Custo Unit.');
-                    tableHeaders.push('Custo Total');
-                }
-
-                const tableData = state.products.toOrder.map(p => {
-                    const row = [ p.IDENTIFIER, p.DESCRICAO, p.SUGESTAO ];
-                    if(hasCost) {
-                        row.push(p.C_REAL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
-                        row.push((p.C_REAL * p.SUGESTAO).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+                const checkedBoxes = app.exportColumnList.querySelectorAll('input[type="checkbox"]:checked');
+                let selectedColumns = Array.from(checkedBoxes).map(box => ({ key: box.dataset.key, label: box.dataset.label }));
+                const tableHeaders = selectedColumns.map(c => c.label);
+                const orderedKeys = selectedColumns.map(c => c.key);
+                if (tableHeaders.length === 0) { showError('Exportação Vazia', 'Selecione pelo menos uma coluna para exportar.'); return; }
+                const hasCostData = state.headerInfo.hasCostColumn || state.products.toOrder.some(p => p.C_REAL > 0);
+                const hasSaleData = state.headerInfo.hasSaleColumn;
+                let productsToExport = [...state.products.toOrder];
+                if (app.exportSortAlpha.checked) { productsToExport.sort((a, b) => a.DESCRICAO.localeCompare(b.DESCRICAO)); }
+                const tableData = productsToExport.map(product => {
+                    const row = [];
+                    for (const key of orderedKeys) {
+                        switch (key) {
+                            case 'IDENTIFIER': row.push(product.IDENTIFIER); break;
+                            case 'DESCRICAO': row.push(product.DESCRICAO); break;
+                            case 'ESTOQUE': row.push(product.ESTOQUE ?? 0); break;
+                            case 'BRANCHES':
+                                const branchString = product.branchStock ? Object.entries(product.branchStock).map(([name, qty]) => `${name}: ${safeParseInt(qty)}`).join('; ') : 'N/A';
+                                row.push(branchString); break;
+                            // Nova Coluna
+                            case 'BRANCH_STATUS':
+                                const statusString = product.branchStatus ? Object.entries(product.branchStatus).map(([name, status]) => `${name}: ${status.diff > 0 ? '+' : ''}${status.diff}`).join('; ') : 'N/A';
+                                row.push(statusString); break;
+                            case 'ULTIMA_ENTRADA': row.push(safeParseInt(product.ULTIMA_ENTRADA)); break;
+                            case 'SUGESTAO': row.push(product.SUGESTAO); break;
+                            case 'SUGESTAO_TRANSF': row.push(hasSaleData && state.headerInfo.periodoDias ? (product.SUGESTAO_TRANSF ?? 0) : 'N/D'); break;
+                            case 'C_REAL': row.push(hasCostData ? (product.C_REAL ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/D'); break;
+                            case 'COST_TOTAL': row.push(hasCostData ? ((product.C_REAL ?? 0) * product.SUGESTAO).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/D'); break;
+                            default: row.push('');
+                        }
                     }
                     return row;
                 });
-                
+                doc.setFontSize(18); doc.text("Sugestão de Pedido", 14, 22);
+                doc.setFontSize(11); doc.setTextColor(100);
+                doc.text(`Fornecedor: ${state.headerInfo.fornecedor || 'N/A'}`, 14, 30);
+                doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 36);
                 let finalY = 0;
-                doc.autoTable({
-                    startY: 45,
-                    head: [tableHeaders],
-                    body: tableData,
-                    theme: 'grid',
-                    headStyles: { fillColor: [45, 55, 72] },
-                    didDrawPage: function (data) {
-                        finalY = data.cursor.y;
-                    }
-                });
-                
-                if (finalY === 0 && doc.lastAutoTable) { 
-                    finalY = doc.lastAutoTable.finalY;
-                }
-
-                if(hasCost) {
-                    const totalCost = state.products.toOrder.reduce((sum, item) => sum + (item.C_REAL * item.SUGESTAO), 0);
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
+                doc.autoTable({ startY: 45, head: [tableHeaders], body: tableData, theme: 'grid', headStyles: { fillColor: [45, 55, 72] }, didDrawPage: function (data) { finalY = data.cursor.y; } });
+                if (finalY === 0 && doc.lastAutoTable) { finalY = doc.lastAutoTable.finalY; }
+                if (hasCostData && (orderedKeys.includes('C_REAL') || orderedKeys.includes('COST_TOTAL'))) {
+                    const totalCost = state.products.toOrder.reduce((sum, item) => sum + ((item.C_REAL ?? 0) * item.SUGESTAO), 0);
+                    doc.setFontSize(12); doc.setFont(undefined, 'bold');
                     doc.text('Custo Total do Pedido:', 14, finalY + 10);
                     doc.text(totalCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 200, finalY + 10, { align: 'right' });
                 }
-
-                const filename = `Pedido_${state.headerInfo.fornecedor.replace(/\s/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+                const filename = `Pedido_${(state.headerInfo.fornecedor || 'Fornecedor').replace(/[^\w]/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
                 doc.save(filename);
+                closeExportOptionsModal();
+            };
+
+            app.newAnalysisBtn.addEventListener('click', () => { if (!app.mainContent.classList.contains('hidden')) { resetToUploadView(); } else { app.fileUpload.click(); } });
+            app.uploadSection.addEventListener('click', () => app.fileUpload.click());
+            app.fileUpload.addEventListener('change', e => { const file = e.target.files[0]; if (file) handleFile(file); e.target.value = null; });
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { app.uploadSection.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false); });
+            ['dragenter', 'dragover'].forEach(eventName => { app.uploadSection.addEventListener(eventName, () => app.uploadSection.classList.add('dragging-over'), false); });
+            ['dragleave', 'drop'].forEach(eventName => { app.uploadSection.addEventListener(eventName, () => app.uploadSection.classList.remove('dragging-over'), false); });
+            app.uploadSection.addEventListener('drop', e => { const file = e.dataTransfer.files[0]; if (file) handleFile(file); }, false);
+            app.tabsContainer.addEventListener('click', e => { const button = e.target.closest('.tab-btn'); if (button) { state.activeTab = button.dataset.tab; state.pagination.currentPage = 1; render(); } });
+            app.searchInput.addEventListener('input', e => { state.searchTerm = e.target.value; state.pagination.currentPage = 1; renderTable(); });
+            app.tablesContainer.addEventListener('click', e => {
+                const target = e.target; const actionButton = target.closest('button[data-action]'); const sortableHeader = target.closest('.table-header-sortable'); const descriptionSpan = target.closest('[data-action="edit-desc"]');
+                if (actionButton) {
+                    const action = actionButton.dataset.action; const id = actionButton.dataset.id;
+                    if (action === 'mark-ordered') moveItem(id, 'toOrder', 'ordered'); if (action === 'mark-ignored') moveItem(id, 'toOrder', 'ignored'); if (action === 'undo') moveItem(id, state.activeTab, 'toOrder'); if (action === 'manage-stock') openBranchStockModal(id);
+                } else if (sortableHeader) {
+                    const key = sortableHeader.dataset.sortKey; const isAscending = state.sortConfig.key === key && state.sortConfig.direction === 'ascending'; state.sortConfig = { key: key, direction: isAscending ? 'descending' : 'ascending' }; renderTable();
+                } else if (descriptionSpan) {
+                    if (descriptionSpan.isContentEditable || state.activeTab !== 'toOrder') return;
+                    descriptionSpan.contentEditable = 'true'; descriptionSpan.classList.add('bg-white', 'ring-1', 'ring-blue-500', 'outline-none'); descriptionSpan.focus();
+                    const selection = window.getSelection(); const range = document.createRange(); range.selectNodeContents(descriptionSpan); selection.removeAllRanges(); selection.addRange(range);
+                    const id = descriptionSpan.dataset.id; const originalText = descriptionSpan.textContent;
+                    const saveEdit = () => {
+                        descriptionSpan.contentEditable = 'false'; descriptionSpan.classList.remove('bg-white', 'ring-1', 'ring-blue-500', 'outline-none'); const newDescription = descriptionSpan.textContent.trim();
+                        if (newDescription && newDescription !== originalText) { updateDescription(id, newDescription); } else { descriptionSpan.textContent = originalText; }
+                        descriptionSpan.removeEventListener('blur', saveEdit); descriptionSpan.removeEventListener('keydown', handleKeydown);
+                    };
+                    const handleKeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); saveEdit(); } else if (e.key === 'Escape') { descriptionSpan.textContent = originalText; saveEdit(); } };
+                    descriptionSpan.addEventListener('blur', saveEdit); descriptionSpan.addEventListener('keydown', handleKeydown);
+                }
+            });
+            app.tablesContainer.addEventListener('change', e => {
+                const target = e.target;
+                if (target.type === 'number' && !target.dataset.field) { const id = target.dataset.id; const quantity = Math.max(0, safeParseInt(target.value)); target.value = quantity; updateQuantity(id, quantity); }
+                else if (target.type === 'number' && target.dataset.field === 'last-entry') { const id = target.dataset.id; const value = Math.max(0, safeParseInt(target.value)); target.value = value; updateLastEntry(id, value); }
+            });
+            app.exportPdfBtn.addEventListener('click', openExportOptionsModal);
+            app.historyBtn.addEventListener('click', () => { renderHistory(); app.historyModal.classList.remove('hidden'); });
+            app.closeHistoryModalBtn.addEventListener('click', () => app.historyModal.classList.add('hidden'));
+            app.historyList.addEventListener('click', e => {
+                const button = e.target.closest('button'); if (!button) return; const action = button.dataset.action; const id = button.dataset.id;
+                if (action === 'load-history' && loadState(id)) { app.historyModal.classList.add('hidden'); }
+                if (action === 'delete-history') { localStorage.removeItem(id); let index = JSON.parse(localStorage.getItem('analyses_index')) || []; index = index.filter(entry => entry.id !== id); localStorage.setItem('analyses_index', JSON.stringify(index)); renderHistory(); }
+            });
+            app.paginationControls.addEventListener('click', e => {
+                const target = e.target.closest('button'); if (!target) return; let needsRender = false;
+                if (target.id === 'prev-page' && state.pagination.currentPage > 1) { state.pagination.currentPage--; needsRender = true; }
+                if (target.id === 'next-page') { const totalItems = state.products[state.activeTab].filter(p => !state.searchTerm || p.DESCRICAO.toLowerCase().includes(state.searchTerm.toLowerCase()) || p.IDENTIFIER.includes(state.searchTerm)).length; const itemsPerPage = state.pagination.itemsPerPage; const totalPages = itemsPerPage === 0 ? 1 : Math.ceil(totalItems / itemsPerPage); if (state.pagination.currentPage < totalPages) { state.pagination.currentPage++; needsRender = true; } }
+                if (needsRender) renderTable();
+            });
+            app.paginationControls.addEventListener('change', e => { if (e.target.id === 'items-per-page') { state.pagination.itemsPerPage = Number(e.target.value); state.pagination.currentPage = 1; renderTable(); } });
+            const openAddProductModal = () => { app.addProductForm.reset(); app.addEanLabel.textContent = state.idType === 'EAN' ? 'EAN' : 'Cód. Interno'; app.addCustoWrapper.style.display = state.headerInfo.hasCostColumn ? 'block' : 'none'; app.addProductModal.classList.remove('hidden'); document.getElementById('add-ean').focus(); };
+            const closeAddProductModal = () => app.addProductModal.classList.add('hidden');
+            const handleSaveProduct = (e) => {
+                e.preventDefault(); const formData = new FormData(app.addProductForm); const id = formData.get('ean').trim(); const sugestao = safeParseInt(formData.get('sugestao'));
+                if (!id || sugestao <= 0) { showError('Campos Obrigatórios', `O campo <strong>${(state.idType === 'EAN' ? 'EAN' : 'Cód. Interno')}</strong> e a <strong>Sugestão</strong> (maior que 0) são obrigatórios.`); return; }
+                const allProducts = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored]; if (allProducts.some(p => p.id === id)) { showError('Produto Duplicado', 'Um produto com este identificador (EAN ou Cód. Interno) já existe nesta análise.'); return; }
+                const formStock = Math.max(0, safeParseInt(formData.get('estoque'))); const defaultBranch = getGlobalBranches()[0]; let branchStock = {}; branchStock[defaultBranch] = formStock; getGlobalBranches().forEach(branchName => { if (!(branchName in branchStock)) { branchStock[branchName] = 0; } });
+                const newProduct = { id: id, IDENTIFIER: id, DESCRICAO: formData.get('descricao').trim() || 'S/D', ESTOQUE: formStock, branchStock: branchStock, VENDA: 0, SUGESTAO: sugestao, C_REAL: state.headerInfo.hasCostColumn ? Math.max(0, safeParseFloat(formData.get('custo'))) : 0, ULTIMA_ENTRADA: Math.max(0, safeParseInt(formData.get('ultima-entrada'))), SUGESTAO_TRANSF: 0, branchStatus: {} };
+                recalculateProductTotalStock(newProduct); calculateCoverageTransferSuggestion(newProduct); calculateBranchBalanceStatus(newProduct); // Calcula tudo
+                state.products.toOrder.unshift(newProduct); saveState(); render(); closeAddProductModal();
+            };
+            app.addProductBtn.addEventListener('click', openAddProductModal); app.cancelAddProductBtn.addEventListener('click', closeAddProductModal); app.cancelAddProductBtnHeader.addEventListener('click', closeAddProductModal); app.addProductForm.addEventListener('submit', handleSaveProduct);
+            app.closeExportOptionsModalBtn.addEventListener('click', closeExportOptionsModal); app.cancelExportBtn.addEventListener('click', closeExportOptionsModal); app.generatePdfBtn.addEventListener('click', generateCustomPdf);
+
+            // --- Modal de Gestão de Filiais (Modificado) ---
+            const openBranchManagerModal = () => { const settings = getGlobalSettings(); app.transferPercentageInput.value = settings.transferCalculationPercentage; renderBranchManagerModal(); app.branchManagerModal.classList.remove('hidden'); };
+            const closeBranchManagerModal = () => { app.branchManagerModal.classList.add('hidden'); };
+            const renderBranchManagerModal = () => {
+                const branches = getGlobalBranches();
+                app.branchList.innerHTML = branches.map(branch => `<div class="flex justify-between items-center p-2 bg-gray-50 rounded-md"><span class="font-medium text-gray-800">${branch}</span>${branches.length > 1 ? `<button data-action="delete-branch" data-branch-name="${branch}" class="text-red-500 hover:text-red-700" title="Excluir Filial"><i data-lucide="trash-2" class="h-4 w-4"></i></button>` : ''}</div>`).join('');
+                lucide.createIcons();
+            };
+            const handleAddNewBranch = (e) => {
+                e.preventDefault(); const branchName = app.addBranchNameInput.value.trim(); if (!branchName) return; let branches = getGlobalBranches(); if (branches.some(b => b.toUpperCase() === branchName.toUpperCase())) { showError('Filial Duplicada', 'Já existe uma filial com este nome.'); return; }
+                branches.push(branchName); saveGlobalBranches(branches);
+                const allProducts = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored];
+                allProducts.forEach(product => {
+                    if (!product.branchStock) product.branchStock = {};
+                    if (!product.branchStock[branchName]) { product.branchStock[branchName] = 0; }
+                    // Recalcula status de equilíbrio com a nova filial
+                    calculateBranchBalanceStatus(product);
+                });
+                if (state.currentAnalysisId) { saveState(); } app.addBranchNameInput.value = ''; renderBranchManagerModal();
+            };
+            const handleDeleteBranch = (branchName) => {
+                let branches = getGlobalBranches(); if (branches.length <= 1) { showError('Ação Inválida', 'Não é possível excluir a última filial.'); return; }
+                branches = branches.filter(b => b !== branchName); saveGlobalBranches(branches);
+                const allProducts = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored];
+                allProducts.forEach(product => {
+                    if (product.branchStock && branchName in product.branchStock) { delete product.branchStock[branchName]; }
+                    recalculateProductTotalStock(product);
+                    // Recalcula ambos após remover filial
+                    calculateCoverageTransferSuggestion(product);
+                    calculateBranchBalanceStatus(product);
+                });
+                if (state.currentAnalysisId) { saveState(); render(); } renderBranchManagerModal();
+            };
+            app.branchManagerBtn.addEventListener('click', openBranchManagerModal); app.closeBranchManagerModalBtn.addEventListener('click', closeBranchManagerModal); app.cancelSettingsBtn.addEventListener('click', closeBranchManagerModal);
+            app.saveSettingsBtn.addEventListener('click', () => {
+                const newPercentage = app.transferPercentageInput.value; saveGlobalSettings({ transferCalculationPercentage: newPercentage });
+                if (state.currentAnalysisId) {
+                    const allProducts = [...state.products.toOrder, ...state.products.ordered, ...state.products.ignored];
+                    allProducts.forEach(product => { calculateCoverageTransferSuggestion(product); }); // Recalcula só a sugestão de cobertura
+                    saveState(); render();
+                } closeBranchManagerModal();
+            });
+            app.addBranchForm.addEventListener('submit', handleAddNewBranch); app.branchList.addEventListener('click', (e) => { const deleteBtn = e.target.closest('[data-action="delete-branch"]'); if (deleteBtn) { handleDeleteBranch(deleteBtn.dataset.branchName); } });
+
+            // --- Modal de Gestão de Estoque por Filial (Modificado) ---
+
+            /**
+             * Atualiza a secção de Status de Equilíbrio no modal.
+             * @param {object} product - O produto sendo editado.
+             * @param {number} [tempTotalStock] - Opcional. Estoque total temporário calculado a partir dos inputs. Se não fornecido, usa product.ESTOQUE.
+             */
+            const updateBranchStockModalBalanceUI = (product, tempTotalStock) => {
+                const branches = getGlobalBranches();
+                const numBranches = branches.length;
+                if (numBranches <= 1) {
+                    app.branchBalanceContainer.classList.add('hidden'); // Esconde se só tem 1 filial
+                    return;
+                }
+                app.branchBalanceContainer.classList.remove('hidden');
+
+                const totalStock = typeof tempTotalStock !== 'undefined' ? tempTotalStock : product.ESTOQUE;
+                const idealStockPerBranch = numBranches > 0 ? totalStock / numBranches : 0;
+                const idealStockRounded = Math.round(idealStockPerBranch);
+
+                app.branchBalanceList.innerHTML = branches.map(branchName => {
+                    // Pega o valor do input se existir, senão o valor guardado
+                    const input = app.branchStockList.querySelector(`input[data-branch-name="${branchName}"]`);
+                    const currentStock = input ? safeParseInt(input.value) : (product.branchStock[branchName] ?? 0);
+                    const difference = currentStock - idealStockPerBranch;
+                    const diffRounded = Math.round(difference);
+                    let status = 'Equilibrado';
+                    let statusColor = 'text-gray-600';
+                    let diffPrefix = '';
+
+                    if (difference > 0.5) { status = 'Excedente'; statusColor = 'text-green-600 font-semibold'; diffPrefix = '+'; }
+                    else if (difference < -0.5) { status = 'Défice'; statusColor = 'text-red-600 font-semibold'; }
+
+                    return `
+                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md text-sm">
+                            <span class="font-medium text-gray-700 w-1/3">${branchName}</span>
+                            <span class="text-gray-600 w-1/4 text-center">Atual: ${currentStock}</span>
+                            <span class="text-gray-500 w-1/4 text-center">Ideal: ${idealStockRounded}</span>
+                            <span class="${statusColor} w-1/4 text-right">${diffPrefix}${diffRounded}</span>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            const openBranchStockModal = (id) => {
+                const product = findProductById(id);
+                if (!product) return;
+                state.editingStockForProductId = id;
+                app.branchStockProductName.textContent = product.DESCRICAO;
+
+                const branches = getGlobalBranches();
+                if (!product.branchStock) product.branchStock = {};
+                branches.forEach(branchName => { if (!(branchName in product.branchStock)) { product.branchStock[branchName] = 0; } });
+                Object.keys(product.branchStock).forEach(productBranch => { if (!branches.includes(productBranch)) { delete product.branchStock[productBranch]; } });
+
+                app.branchStockList.innerHTML = branches.map(branch => `
+                    <div class="flex items-center justify-between gap-4">
+                        <label for="stock-${branch}" class="block text-sm font-medium text-gray-700">${branch}</label>
+                        <input type="number" id="stock-${branch}" data-branch-name="${branch}" value="${product.branchStock[branch]}" min="0"
+                               class="branch-stock-input w-32 p-1 border rounded-md text-center font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500">
+                    </div>`).join('');
+
+                // Atualiza a UI de equilíbrio com os dados atuais
+                updateBranchStockModalBalanceUI(product);
+
+                app.branchStockModal.classList.remove('hidden');
+            };
+
+            // Listener para recalcular equilíbrio em tempo real ao digitar no modal
+            app.branchStockList.addEventListener('input', (e) => {
+                if (e.target.classList.contains('branch-stock-input')) {
+                    const product = findProductById(state.editingStockForProductId);
+                    if (!product) return;
+                    let currentModalStock = 0;
+                    const inputs = app.branchStockList.querySelectorAll('.branch-stock-input');
+                    inputs.forEach(input => { currentModalStock += safeParseInt(input.value); });
+                    // Atualiza a UI de equilíbrio com o estoque temporário
+                    updateBranchStockModalBalanceUI(product, currentModalStock);
+                }
             });
 
-            app.historyBtn.addEventListener('click',()=>{renderHistory();app.historyModal.classList.remove('hidden');});
-            app.closeHistoryModalBtn.addEventListener('click',()=>app.historyModal.classList.add('hidden'));
-            app.historyList.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.action,i=b.dataset.id;if(a==='load-history'&&loadState(i))app.historyModal.classList.add('hidden');if(a==='delete-history'){localStorage.removeItem(i);let x=JSON.parse(localStorage.getItem('analyses_index'))||[];x=x.filter(t=>t.id!==i);localStorage.setItem('analyses_index',JSON.stringify(x));renderHistory();}});
-            app.paginationControls.addEventListener('click', e => {const target = e.target.closest('button'); if (!target) return; if (target.id === 'prev-page') { state.pagination.currentPage--; } if (target.id === 'next-page') { state.pagination.currentPage++; } renderTable();});
-            app.paginationControls.addEventListener('change', e => {if (e.target.id === 'items-per-page') { state.pagination.itemsPerPage = Number(e.target.value); state.pagination.currentPage = 1; renderTable(); }});
+            const closeBranchStockModal = () => { app.branchStockModal.classList.add('hidden'); state.editingStockForProductId = null; };
 
-            app.confirmContinueBtn.addEventListener('click', () => {
-                app.confirmationModal.classList.add('hidden');
-                const { data, cols, headerRowIndex } = tempProcessData;
-                finalizeProcessing(data, cols, headerRowIndex, true); // True to use internal code
-            });
+            const handleSaveBranchStock = () => {
+                const product = findProductById(state.editingStockForProductId);
+                if (!product) { closeBranchStockModal(); return; }
+                if (!product.branchStock) product.branchStock = {};
+                const inputs = app.branchStockList.querySelectorAll('input[type="number"]');
+                let totalStock = 0;
+                inputs.forEach(input => {
+                    const branchName = input.dataset.branchName;
+                    const stock = Math.max(0, safeParseInt(input.value));
+                    input.value = stock; product.branchStock[branchName] = stock; totalStock += stock;
+                });
+                product.ESTOQUE = totalStock;
+                // Recalcula ambos os valores com o novo estoque
+                calculateCoverageTransferSuggestion(product);
+                calculateBranchBalanceStatus(product);
+                saveState(); render(); closeBranchStockModal();
+            };
 
-            app.confirmCancelBtn.addEventListener('click', () => {
-                app.confirmationModal.classList.add('hidden');
-                resetToUploadView();
-            });
+            app.closeBranchStockModalBtn.addEventListener('click', closeBranchStockModal);
+            app.cancelBranchStockBtn.addEventListener('click', closeBranchStockModal);
+            app.saveBranchStockBtn.addEventListener('click', handleSaveBranchStock);
 
-            const lastId=(JSON.parse(localStorage.getItem('analyses_index'))||[])[0]?.id; if(lastId)loadState(lastId);
+            app.confirmContinueBtn.addEventListener('click', () => { app.confirmationModal.classList.add('hidden'); const { data, cols, headerRowIndex } = tempProcessData; finalizeProcessing(data, cols, headerRowIndex, true, false); tempProcessData = {}; });
+            app.confirmCancelBtn.addEventListener('click', () => { app.confirmationModal.classList.add('hidden'); resetToUploadView(); tempProcessData = {}; });
+
+            const lastAnalysisId = (JSON.parse(localStorage.getItem('analyses_index')) || [])[0]?.id;
+            if (lastAnalysisId) { setTimeout(() => { loadState(lastAnalysisId); }, 100); }
             document.querySelector('footer p').innerHTML = `&copy; ${new Date().getFullYear()} Gestor de Pedidos. Todos os direitos reservados.`;
         });
     </script>
-</body></html>
+
+</body>
+
+</html>
+
