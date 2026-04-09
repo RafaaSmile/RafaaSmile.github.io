@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inteligência Logística: Rotas China → Paraguai → Brasil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #020617; 
+            color: #f8fafc; 
+        }
+        
+        /* Floating Glass Header Logic */
+        .nav-container {
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            padding: 1.5rem 2rem;
+            width: 100%;
+            max-width: 100%;
+            top: 0;
+        }
+        
+        .nav-container.scrolled {
+            padding: 0.75rem 1rem;
+            top: 1rem;
+        }
+
+        .glass-pill {
+            background: rgba(15, 23, 42, 0);
+            border: 1px solid rgba(255, 255, 255, 0);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            border-radius: 9999px;
+        }
+
+        .scrolled .glass-pill {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Reading Progress */
+        #reading-progress {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+            width: 0%;
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            transition: width 0.2s ease;
+            border-radius: 9999px;
+        }
+
+        /* Active Link Indicator */
+        .nav-link {
+            position: relative;
+            color: rgba(255, 255, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #10b981;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        /* Hero Text Gradient */
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Reveal Animations */
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.7s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Chart Styling */
+        .chart-box {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Timeline micro-interactions */
+        .timeline-step { transition: transform 0.2s ease; }
+        .timeline-step:hover { transform: scale(1.01); }
+        .timeline-step-content { max-height: 0; overflow: hidden; transition: all 0.4s ease; opacity: 0; }
+        .timeline-step.expanded .timeline-step-content { max-height: 150px; opacity: 1; margin-top: 1rem; }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-500/30">
+
+    <!-- Adaptive Header -->
+    <header id="navbar" class="nav-container fixed z-50">
+        <div class="glass-pill px-6 py-3 flex items-center justify-between relative">
+            <!-- Brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <span class="text-slate-900 font-black text-lg">R</span>
+                </div>
+                <span class="text-lg font-bold tracking-tighter text-white hidden sm:block">Rota<span class="text-emerald-400">PY</span></span>
+            </div>
+            
+            <!-- Links -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#hero" class="nav-link text-xs font-bold uppercase tracking-widest active">Início</a>
+                <a href="#contexto" class="nav-link text-xs font-bold uppercase tracking-widest">Atores</a>
+                <a href="#dados" class="nav-link text-xs font-bold uppercase tracking-widest">Análise</a>
+                <a href="#operacao" class="nav-link text-xs font-bold uppercase tracking-widest">Processo</a>
+            </nav>
+
+            <!-- CTA -->
+            <div class="flex items-center gap-4">
+                <a href="#veredito" class="px-5 py-2 text-xs font-extrabold text-slate-900 bg-emerald-400 hover:bg-emerald-300 rounded-full transition-all shadow-lg shadow-emerald-500/20 active:scale-95 uppercase tracking-tighter">
+                    Veredito
+                </a>
+            </div>
+
+            <!-- Reading Progress bar integrated into the glass border -->
+            <div id="reading-progress"></div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="min-h-screen flex items-center justify-center relative px-6 overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full animate-pulse"></div>
+                <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full"></div>
+            </div>
+
+            <div class="max-w-5xl mx-auto text-center z-10 reveal">
+                <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full mb-8">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Inteligência Logística 2026</span>
+                </div>
+                <h1 class="text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[0.9] text-gradient">
+                    Maximize Suas<br><span class="text-emerald-400">Margens.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    A estrutura definitiva para bypass aduaneiro estratégico e otimização tributária na rota <span class="text-white border-b border-emerald-500/30">China → Paraguai → Brasil</span>.
+                </p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="#dados" class="px-10 py-5 bg-white text-slate-900 font-bold rounded-2xl hover:scale-105 transition-all shadow-2xl">Explorar Dados</a>
+                    <a href="#operacao" class="px-10 py-5 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all">Ver Workflow</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contexto Section -->
+        <section id="contexto" class="py-32 bg-slate-950 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-32 reveal">
+                    <div class="p-8 rounded-3xl bg-white/5 border border-white/10 group hover:border-emerald-500/50 transition-all">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Volume Base</h4>
+                        <p class="text-2xl font-bold">1.0 kg</p>
+                        <p class="text-xs text-slate-500 mt-2">Carga fracionada</p>
+                    </div>
+                    <div class="p-8 rounded-3xl bg-white/5 border border-white/10 group hover:border-emerald-500/50 transition-all">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Valor FOB</h4>
+                        <p class="text-2xl font-bold">US$ 28.00</p>
+                        <p class="text-xs text-slate-500 mt-2">~ R$ 140,00</p>
+                    </div>
+                    <div class="p-8 rounded-3xl bg-white/5 border border-white/10 group hover:border-emerald-500/50 transition-all">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Moeda</h4>
+                        <p class="text-2xl font-bold">BRL / USD</p>
+                        <p class="text-xs text-slate-500 mt-2">Câmbio 5.00</p>
+                    </div>
+                    <div class="p-8 rounded-3xl bg-white/5 border border-white/10 group hover:border-emerald-500/50 transition-all">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Status</h4>
+                        <p class="text-2xl font-bold text-emerald-400">Ativo</p>
+                        <p class="text-xs text-slate-500 mt-2">Monitoramento Abril</p>
+                    </div>
+                </div>
+
+                <div class="text-center mb-16 reveal">
+                    <h2 class="text-4xl font-extrabold mb-4">Os Atores da Cadeia</h2>
+                    <p class="text-slate-400 max-w-xl mx-auto">A eficiência logística depende da coordenação perfeita entre estes quatro pilares.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
+                    <div class="p-8 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/[0.08] transition-all">
+                        <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-6 text-xl">🛒</div>
+                        <h3 class="font-bold text-white mb-2">Agentes China</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Filtro de qualidade, consolidação de pacotes e fotos no armazém (Guangzhou/Shenzhen).</p>
+                    </div>
+                    <div class="p-8 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/[0.08] transition-all">
+                        <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 text-xl">✈️</div>
+                        <h3 class="font-bold text-white mb-2">Couriers PY</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Ponte aérea internacional com regime tributário simplificado no Paraguai.</p>
+                    </div>
+                    <div class="p-8 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/[0.08] transition-all">
+                        <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center mb-6 text-xl">🚢</div>
+                        <h3 class="font-bold text-white mb-2">Forwarders DDP</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Soluções para grandes volumes (acima de 21kg) com desembaraço incluso.</p>
+                    </div>
+                    <div class="p-8 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/[0.08] transition-all">
+                        <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center mb-6 text-xl">🌉</div>
+                        <h3 class="font-bold text-white mb-2">Assessoria Foz</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Gestão da travessia física da fronteira e reenvio via transportadoras nacionais.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gráficos Section -->
+        <section id="dados" class="py-32 bg-slate-900 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 reveal">
+                    <div>
+                        <h2 class="text-4xl font-extrabold mb-4">Análise Financeira</h2>
+                        <p class="text-slate-400">Onde o lucro realmente acontece: comparativo de custos finais por unidade.</p>
+                    </div>
+                    <div class="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+                        <button class="scenario-btn active px-6 py-2 rounded-xl text-xs font-bold transition-all" data-scenario="B">RECOMENDADO</button>
+                        <button class="scenario-btn px-6 py-2 rounded-xl text-xs font-bold transition-all" data-scenario="D">ESCALA</button>
+                        <button class="scenario-btn px-6 py-2 rounded-xl text-xs font-bold transition-all" data-scenario="A">TRADICIONAL</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div class="chart-box p-8 rounded-3xl reveal">
+                        <div class="h-[400px]">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 reveal">
+                        <div class="w-full md:w-1/2 h-[300px]">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                        <div id="scenario-details" class="w-full md:w-1/2 space-y-6">
+                            <!-- JS Inject -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Processo Section -->
+        <section id="operacao" class="py-32 bg-slate-950 px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-20 reveal">
+                    <h2 class="text-4xl font-extrabold mb-4">O Fluxo Operacional</h2>
+                    <p class="text-slate-400">Etapas da jornada da carga até o consumidor final.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="timeline-step bg-white/5 border border-white/10 p-8 rounded-3xl cursor-pointer reveal" onclick="toggleTimeline(this)">
+                        <div class="flex items-center gap-6">
+                            <span class="text-2xl font-black text-emerald-400">01</span>
+                            <h4 class="text-xl font-bold">Consolidação na Origem</h4>
+                        </div>
+                        <div class="timeline-step-content text-slate-400">
+                            Seus produtos são recebidos pelo agente na China, verificados e repacotados para reduzir o peso dimensional (volumétrico).
+                        </div>
+                    </div>
+                    <div class="timeline-step bg-white/5 border border-white/10 p-8 rounded-3xl cursor-pointer reveal" onclick="toggleTimeline(this)">
+                        <div class="flex items-center gap-6">
+                            <span class="text-2xl font-black text-emerald-400">02</span>
+                            <h4 class="text-xl font-bold">Trânsito Internacional PY</h4>
+                        </div>
+                        <div class="timeline-step-content text-slate-400">
+                            A carga é enviada para Ciudad del Este. O Paraguai possui taxas de importação extremamente baixas para eletrônicos e vestuário.
+                        </div>
+                    </div>
+                    <div class="timeline-step bg-white/5 border border-white/10 p-8 rounded-3xl cursor-pointer reveal" onclick="toggleTimeline(this)">
+                        <div class="flex items-center gap-6">
+                            <span class="text-2xl font-black text-emerald-400">03</span>
+                            <h4 class="text-xl font-bold">Travessia e Last Mile BR</h4>
+                        </div>
+                        <div class="timeline-step-content text-slate-400">
+                            A assessoria local retira o pacote, cruza a ponte da amizade e posta nos Correios ou Jadlog de Foz do Iguaçu com etiqueta nacional.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Veredito -->
+        <section id="veredito" class="py-32 bg-emerald-400 text-slate-900 px-6">
+            <div class="max-w-7xl mx-auto text-center reveal">
+                <h2 class="text-5xl font-black mb-12">Escolha Sua Estratégia</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="p-12 bg-white rounded-[40px] text-left shadow-2xl">
+                        <span class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-4 block">Dropshipping / Pequeno Lote</span>
+                        <h4 class="text-3xl font-black mb-6">Cenário B (Courier)</h4>
+                        <p class="text-slate-600 mb-8 font-medium leading-relaxed">Otimizado para quem envia de 1 a 20 unidades por mês. Elimina a retenção de Curitiba e garante 15-20% mais margem.</p>
+                        <div class="text-4xl font-black">R$ 305,00<span class="text-sm font-bold text-slate-400 ml-2">/ un média</span></div>
+                    </div>
+                    <div class="p-12 bg-slate-900 text-white rounded-[40px] text-left shadow-2xl">
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 block">Revenda / Escala B2B</span>
+                        <h4 class="text-3xl font-black mb-6">Cenário D (DDP)</h4>
+                        <p class="text-slate-400 mb-8 font-medium leading-relaxed">Foco em reduzir o frete por kg. Ideal para estoques locais. Reduz o custo unitário drasticamente ao diluir taxas em massa.</p>
+                        <div class="text-4xl font-black">R$ 242,50<span class="text-sm font-bold text-slate-500 ml-2">/ un média</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-20 bg-black text-center border-t border-white/5">
+        <p class="text-slate-600 text-sm">© 2026 RotaPY. Dados analíticos para suporte de decisão logística.</p>
+    </footer>
+
+    <script>
+        // --- Navbar Transformation & Progress Bar ---
+        const navbar = document.getElementById('navbar');
+        const readingBar = document.getElementById('reading-progress');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            // Scroll logic for glass header
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+
+            // Progress bar
+            const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (window.scrollY / totalHeight) * 100;
+            readingBar.style.width = `${progress}%`;
+
+            // Scroll Spy
+            let current = "";
+            document.querySelectorAll('section').forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove("active");
+                if (link.getAttribute("href").includes(current)) {
+                    link.classList.add("active");
+                }
+            });
+        });
+
+        // --- Data & Charts ---
+        const scenarioData = {
+            A: { title: 'Direto BR (Tradicional)', total: 370.00, breakdown: [140, 120, 110], color: '#64748b', desc: 'Aduana brasileira com 92% de taxas agregadas.' },
+            B: { title: 'Via PY Courier', total: 305.00, breakdown: [140, 115, 50], color: '#10b981', desc: 'Melhor para pessoa física e baixo volume.' },
+            D: { title: 'Forwarder DDP', total: 242.50, breakdown: [140, 77.5, 25], color: '#3b82f6', desc: 'Escala industrial com frete por kg diluído.' }
+        };
+
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#94a3b8';
+
+        // Bar Chart
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        const barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['BR Direto', 'PY Courier', 'DDP Escala'],
+                datasets: [{
+                    data: [370, 305, 242.5],
+                    backgroundColor: ['rgba(255,255,255,0.1)', '#10b981', '#3b82f6'],
+                    borderRadius: 15,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } }, 
+                    x: { grid: { display: false }, border: { display: false } }
+                }
+            }
+        });
+
+        // Doughnut Chart
+        const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+        let doughnutChart = new Chart(doughnutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Produto', 'Logística', 'Taxas'],
+                datasets: [{
+                    data: [140, 115, 50],
+                    backgroundColor: ['#f8fafc', '#10b981', '#064e3b'],
+                    borderWidth: 0,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        function updateUI(key) {
+            const data = scenarioData[key];
+            const details = document.getElementById('scenario-details');
+            
+            // UI Switchers
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.classList.toggle('bg-emerald-400', btn.dataset.scenario === key);
+                btn.classList.toggle('text-slate-900', btn.dataset.scenario === key);
+                btn.classList.toggle('text-white', btn.dataset.scenario !== key);
+            });
+
+            // Update Chart
+            doughnutChart.data.datasets[0].data = data.breakdown;
+            doughnutChart.data.datasets[0].backgroundColor = [
+                '#f8fafc', 
+                data.color, 
+                key === 'A' ? '#334155' : '#064e3b'
+            ];
+            doughnutChart.update();
+
+            // Inject Details
+            details.innerHTML = `
+                <h4 class="text-4xl font-black text-white">R$ ${data.total.toFixed(2)}</h4>
+                <p class="text-sm font-bold text-emerald-400 uppercase tracking-widest">${data.title}</p>
+                <p class="text-sm text-slate-500 leading-relaxed">${data.desc}</p>
+                <div class="pt-4 border-t border-white/10 space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Produto (FOB):</span>
+                        <span class="text-white">R$ 140,00</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Fretes Totais:</span>
+                        <span class="text-white">R$ ${data.breakdown[1].toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Taxas Aduaneiras:</span>
+                        <span class="text-white">R$ ${data.breakdown[2].toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.querySelectorAll('.scenario-btn').forEach(btn => {
+            btn.addEventListener('click', () => updateUI(btn.dataset.scenario));
+        });
+
+        // Reveal logic
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('active'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(r => observer.observe(r));
+
+        function toggleTimeline(el) { el.classList.toggle('expanded'); }
+        
+        // Init
+        updateUI('B');
+    </script>
+</body>
+</html>
