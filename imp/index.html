@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedImport 2026 | Intelligence Interface</title>
+    
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            950: '#010409',
+                            900: '#0d1117',
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(16px);
+        }
+
+        body {
+            background-color: #010409;
+            background-image: 
+                radial-gradient(circle at 50% -20%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(30, 41, 59, 0.2) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: #cbd5e1;
+        }
+
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-5px);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #64748b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cyan-glow {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+        }
+
+        input[type="range"] {
+            accent-color: #06b6d4;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .animate-pulse-slow { animation: pulse-slow 4s infinite; }
+
+        /* Custom Scrollbar for inner elements */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.3); border-radius: 10px; }
+
+        /* Tooltips para Termos Técnicos */
+        .tech-term {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dashed rgba(6, 182, 212, 0.5);
+            transition: color 0.3s ease, border-color 0.3s ease;
+            display: inline-block;
+        }
+        .tech-term:hover {
+            color: #22d3ee;
+            border-bottom-color: #22d3ee;
+        }
+        .tech-term .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: #e2e8f0;
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 500;
+            width: max-content;
+            max-width: 280px;
+            z-index: 100;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        .tech-term .tooltip-box strong {
+            color: #22d3ee;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+        }
+        .tech-term .tooltip-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(6, 182, 212, 0.3) transparent transparent transparent;
+        }
+        .tech-term:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-cyan-500/30">
+
+    <!-- Header Centralizado -->
+    <header class="fixed top-6 w-full z-50 px-6">
+        <div class="max-w-fit mx-auto glass-pill px-8 py-3 flex items-center justify-center gap-6 md:gap-10 overflow-x-auto">
+            <a href="#simulador" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-400 transition-colors whitespace-nowrap">Simulador</a>
+            <a href="#arbitragem" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-400 transition-colors whitespace-nowrap">Arbitragem</a>
+            <a href="#sourcing" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-400 transition-colors whitespace-nowrap">Sourcing</a>
+            <a href="#workflow" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-400 transition-colors whitespace-nowrap">Protocolo</a>
+            <a href="#agente" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-cyan-400 transition-colors whitespace-nowrap">Agente</a>
+            <a href="#risco" class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-500/70 hover:text-red-400 transition-colors whitespace-nowrap">Risco</a>
+        </div>
+    </header>
+
+    <!-- Hero Modernista -->
+    <section class="relative pt-44 pb-24 px-6 overflow-hidden text-center">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+        
+        <div class="max-w-5xl mx-auto relative z-10">
+            <div class="inline-block px-4 py-1.5 glass-pill mb-8 border-cyan-500/20">
+                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">Deep Trade Algorithm v4.2</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-8xl lg:text-9xl font-extrabold text-white mb-8 tracking-tighter leading-[0.9] text-gradient">
+                Importação <br>sem Fronteiras.
+            </h1>
+            
+            <p class="text-base md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+                A infraestrutura definitiva para nacionalizar tecnologia médica de alto valor. Domine o sourcing OEM, compliance ANVISA e margens de arbitragem documentadas.
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-6 items-center">
+                <button onclick="document.querySelector('#simulador').scrollIntoView({behavior: 'smooth'})" class="px-10 py-4 bg-white text-black text-sm font-bold rounded-full hover:bg-cyan-400 transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                    Iniciar Simulação Interativa
+                </button>
+                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-600 tracking-[0.2em] uppercase">
+                    <span class="w-8 h-[1px] bg-slate-700"></span>
+                    Explorar Dados
+                    <span class="w-8 h-[1px] bg-slate-700"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulador Interativo -->
+    <section id="simulador" class="py-24 px-6 relative z-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="glass-card p-8 md:p-16 relative overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-8 tracking-tight">Calculadora de ROI <span class="text-cyan-500">_</span></h2>
+                        <div class="space-y-10">
+                            <div class="space-y-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-400 font-medium">Investimento <span class="tech-term">FOB<span class="tooltip-box"><strong>Free on Board</strong>Valor da mercadoria embarcada no navio, sem incluir frete internacional ou seguro.</span></span> (USD)</span>
+                                    <span id="val-usd" class="text-cyan-400 font-bold tracking-widest">$10,000</span>
+                                </div>
+                                <input type="range" id="input-usd" min="5000" max="200000" step="5000" value="10000" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-400 font-medium">Eficiência Logística / Redução de Custo</span>
+                                    <span id="val-eff" class="text-cyan-400 font-bold tracking-widest">85%</span>
+                                </div>
+                                <input type="range" id="input-eff" min="50" max="100" value="85" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-8 uppercase tracking-widest leading-loose">
+                            * Cálculo baseado no multiplicador de 1.62x (II, IPI, PIS, COFINS, ICMS) e câmbio simulado de R$ 5,20.
+                        </p>
+                    </div>
+
+                    <div class="bg-white/[0.02] border border-white/5 rounded-3xl p-10 text-center relative overflow-hidden">
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-cyan-500/10 w-full h-full blur-3xl rounded-full pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 block">Lucro Líquido Estimado</span>
+                            <div id="result-profit" class="text-5xl md:text-7xl font-black text-white mb-4 tracking-tighter transition-transform">R$ 54.200</div>
+                            <div class="flex justify-center items-center gap-2 text-green-400 font-bold text-sm">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                                <span class="tracking-widest uppercase text-xs">Validação Positiva</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 1. Módulo de Arbitragem e Preços -->
+    <section id="arbitragem" class="py-24 px-6 border-t border-white/5 bg-navy-950/30">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-16">
+                <span class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.3em] block mb-2">Módulo 01</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">O Coração do Negócio</h2>
+                <p class="text-slate-400 mt-4 max-w-2xl font-light leading-relaxed">Tabela comparativa real baseada em multiplicador médio de 1.62x sobre o valor CIF. As maiores assimetrias de preço entre a Ásia e o Brasil.</p>
+            </div>
+
+            <div class="glass-card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr class="bg-white/5 text-[10px] uppercase tracking-widest text-slate-400 font-bold border-b border-white/10">
+                                <th class="p-6 w-1/4">Equipamento</th>
+                                <th class="p-6">Preço <span class="tech-term">FOB/CIF<span class="tooltip-box"><strong>FOB:</strong> Livre a Bordo (frete pago pelo comprador).<br><strong>CIF:</strong> Custo, Seguro e Frete (pago pelo vendedor).</span></span> (USD)</th>
+                                <th class="p-6">Custo <span class="tech-term">Nacionalizado<span class="tooltip-box"><strong>Custo Total de Entrada</strong>Soma do valor CIF + Impostos (II, IPI, PIS, COFINS, ICMS) + Taxas Alfandegárias.</span></span> (BRL)</th>
+                                <th class="p-6">Preço Venda BR</th>
+                                <th class="p-6 text-right text-cyan-400">Margem Limpa</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-sm font-medium">
+                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                <td class="p-6 flex items-center gap-4 text-white">
+                                    <div class="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 border border-cyan-500/20"><i class="fa-solid fa-ring text-xs"></i></div>
+                                    Tomógrafo 16 Slices
+                                </td>
+                                <td class="p-6 text-slate-300">$60.000 - $90.000</td>
+                                <td class="p-6 text-slate-400">R$ 480k - R$ 720k</td>
+                                <td class="p-6 font-bold text-white">R$ 800k - R$ 1.3M</td>
+                                <td class="p-6 text-right font-black text-green-400">45% - 65%</td>
+                            </tr>
+                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                <td class="p-6 flex items-center gap-4 text-white">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20"><i class="fa-solid fa-wave-square text-xs"></i></div>
+                                    Ultrassom Colorido
+                                </td>
+                                <td class="p-6 text-slate-300">$12.000 - $20.000</td>
+                                <td class="p-6 text-slate-400">R$ 95k - R$ 160k</td>
+                                <td class="p-6 font-bold text-white">R$ 199k - R$ 270k</td>
+                                <td class="p-6 text-right font-black text-green-400">40% - 55%</td>
+                            </tr>
+                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                <td class="p-6 flex items-center gap-4 text-white">
+                                    <div class="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20"><i class="fa-solid fa-wand-magic-sparkles text-xs"></i></div>
+                                    Laser CO2 (Estética)
+                                </td>
+                                <td class="p-6 text-slate-300">$5.000 - $12.000</td>
+                                <td class="p-6 text-slate-400">R$ 40k - R$ 95k</td>
+                                <td class="p-6 font-bold text-white">R$ 140k - R$ 220k</td>
+                                <td class="p-6 text-right font-black text-green-400">55% - 70%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Sourcing Avançado -->
+    <section id="sourcing" class="py-24 px-6 relative">
+        <!-- Efeito de fundo -->
+        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="mb-16">
+                <span class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.3em] block mb-2">Módulo 02</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Sourcing "Fora do Radar"</h2>
+                <p class="text-slate-400 mt-4 max-w-2xl font-light leading-relaxed">Metodologias de inteligência para ultrapassar intermediários e chegar aos verdadeiros fabricantes OEM mundiais.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-8 group">
+                    <div class="text-cyan-400 text-2xl mb-6 bg-white/5 w-12 h-12 flex items-center justify-center rounded-xl border border-white/10 group-hover:cyan-glow transition-all"><i class="fa-solid fa-user-secret"></i></div>
+                    <h3 class="text-lg font-bold text-white mb-3">Táticas de "Espionagem"</h3>
+                    <p class="text-sm text-slate-400 font-light leading-relaxed mb-4">Uso de ferramentas de Data Mining (ex: <span class="text-white font-medium">Import Yeti</span>) para rastrear os <span class="tech-term">Bill of Lading<span class="tooltip-box"><strong>Conhecimento de Embarque</strong>O documento mais importante da importação marítima, atesta a posse da carga e o contrato de frete.</span></span> da Samsung e GE, localizando as fábricas <span class="tech-term">OEM<span class="tooltip-box"><strong>Original Equipment Manufacturer</strong>Fábrica que produz o equipamento físico que será remarcado/vendido por outras grandes marcas.</span></span> reais.</p>
+                </div>
+
+                <div class="glass-card p-8 group">
+                    <div class="text-cyan-400 text-2xl mb-6 bg-white/5 w-12 h-12 flex items-center justify-center rounded-xl border border-white/10 group-hover:cyan-glow transition-all"><i class="fa-solid fa-globe-asia"></i></div>
+                    <h3 class="text-lg font-bold text-white mb-3">Acesso à China Interna</h3>
+                    <p class="text-sm text-slate-400 font-light leading-relaxed mb-4">Mapeamento via <span class="text-white font-medium">1688.com</span>. Acesso aos fornecedores do mercado doméstico chinês (United Imaging, Mindray) com preços até 30% menores que plataformas internacionais.</p>
+                </div>
+
+                <div class="glass-card p-8 group">
+                    <div class="text-cyan-400 text-2xl mb-6 bg-white/5 w-12 h-12 flex items-center justify-center rounded-xl border border-white/10 group-hover:cyan-glow transition-all"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <h3 class="text-lg font-bold text-white mb-3">Hubs Alternativos</h3>
+                    <p class="text-sm text-slate-400 font-light leading-relaxed mb-4">Diversificação estratégica: Hubs de Raio-X na <span class="text-white font-medium">Índia (Allengers, Trivitron)</span> e equipamentos premium recondicionados na <span class="text-white font-medium">África do Sul (AXIM, DRGEM)</span>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Workflow Detalhado -->
+    <section id="workflow" class="py-24 px-6 border-y border-white/5 bg-navy-950/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-16 text-center">
+                <span class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.3em] block mb-2">Módulo 03</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Workflow Operacional</h2>
+                <p class="text-slate-400 mt-4 max-w-2xl mx-auto font-light leading-relaxed">Da fábrica na origem até ao armazém no Brasil. A sequência lógica onde a falha de uma etapa invalida a próxima.</p>
+            </div>
+
+            <div class="space-y-6 max-w-4xl mx-auto">
+                <!-- Step 1 -->
+                <div class="glass-card p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:border-cyan-500/40 transition-colors group">
+                    <div class="text-4xl font-black text-white/10 group-hover:text-cyan-500/20 transition-colors w-16">01</div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-lg mb-1 flex items-center gap-2">Sourcing & Compliance <i class="fa-solid fa-check-circle text-cyan-500 text-xs"></i></h4>
+                        <p class="text-sm text-slate-400 leading-relaxed font-light">Validação das fábricas OEM. Exigência absoluta da <span class="text-white"><span class="tech-term">ISO 13485<span class="tooltip-box"><strong>Certificação de Qualidade</strong>Norma internacional específica para gestão de qualidade no design e fabricação de produtos médicos. Exigência base da ANVISA.</span></span></span> e Certificados de Segurança Elétrica <span class="text-white"><span class="tech-term">IEC 60601<span class="tooltip-box"><strong>Segurança Eletromédica</strong>Série de normas técnicas rigorosas para garantir a segurança e eficácia de equipamentos médicos elétricos.</span></span></span> para garantir base regulatória.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="glass-card p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:border-cyan-500/40 transition-colors group">
+                    <div class="text-4xl font-black text-white/10 group-hover:text-cyan-500/20 transition-colors w-16">02</div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-lg mb-1">Inspeção Pré-Embarque</h4>
+                        <p class="text-sm text-slate-400 leading-relaxed font-light">Contratação de inspetoras internacionais (<span class="text-white"><span class="tech-term">QIMA/SGS<span class="tooltip-box"><strong>Inspetoras Internacionais</strong>Empresas globais de certificação e inspeção que atuam in loco nas fábricas asiáticas para validar a carga antes do embarque.</span></span></span>) para conferência de números de série e testes funcionais ainda em solo asiático, mitigando risco de devolução.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="glass-card p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:border-cyan-500/40 transition-colors group">
+                    <div class="text-4xl font-black text-white/10 group-hover:text-cyan-500/20 transition-colors w-16">03</div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-lg mb-1">Logística Internacional</h4>
+                        <p class="text-sm text-slate-400 leading-relaxed font-light">Coordenação de bookings. Emissão de <span class="text-white"><span class="tech-term">BL (Marítimo FCL/LCL)<span class="tooltip-box"><strong>Bill of Lading</strong>Documento de transporte marítimo.<br>FCL: Contêiner Exclusivo.<br>LCL: Carga Compartilhada.</span></span></span> ou <span class="tech-term">AWB<span class="tooltip-box"><strong>Air Waybill</strong>Conhecimento de embarque para transporte aéreo.</span></span> (Aéreo). Gestão do tempo de trânsito médio de 45 dias China-Brasil com controle climático.</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="glass-card p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:border-cyan-500/40 transition-colors group">
+                    <div class="text-4xl font-black text-white/10 group-hover:text-cyan-500/20 transition-colors w-16">04</div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-lg mb-1">Desembaraço Aduaneiro</h4>
+                        <p class="text-sm text-slate-400 leading-relaxed font-light">Registro da Declaração Única de Importação (<span class="text-white"><span class="tech-term">DUIMP<span class="tooltip-box"><strong>Declaração Única de Importação</strong>Documento eletrônico central do Novo Processo de Importação no Siscomex, que substitui a antiga DI.</span></span></span>) no <span class="tech-term">Siscomex<span class="tooltip-box"><strong>Siscomex</strong>Sistema Integrado de Comércio Exterior do Governo Federal Brasileiro.</span></span>, pagamento de impostos e anuência crítica junto à <span class="text-white"><span class="tech-term">ANVISA<span class="tooltip-box"><strong>Agência Reguladora</strong>Agência Nacional de Vigilância Sanitária, responsável por autorizar a entrada de itens médicos no Brasil.</span></span></span>.</p>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="glass-card p-6 flex flex-col md:flex-row gap-6 items-start md:items-center hover:border-cyan-500/40 transition-colors group">
+                    <div class="text-4xl font-black text-white/10 group-hover:text-cyan-500/20 transition-colors w-16">05</div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-lg mb-1">Last Mile & Faturação</h4>
+                        <p class="text-sm text-slate-400 leading-relaxed font-light">Emissão de Nota Fiscal de Entrada. Transporte rodoviário nacional rastreado até ao cliente final, finalizando o ciclo de nacionalização.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Guia do Agente Independente -->
+    <section id="agente" class="py-24 px-6 relative">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col lg:flex-row gap-16">
+                <div class="lg:w-1/3">
+                    <span class="text-cyan-500 text-[10px] font-black uppercase tracking-[0.3em] block mb-2">Módulo 04</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight mb-6">Guia do Agente Independente</h2>
+                    <p class="text-slate-400 font-light leading-relaxed mb-8">Modelos de monetização estruturados para atuar como facilitador no comércio internacional, maximizando ganhos e blindando responsabilidades legais.</p>
+                    
+                    <div class="glass-card p-6 border-cyan-500/30 cyan-glow">
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400 block mb-2">Gold Standard Fee</span>
+                        <div class="text-4xl font-black text-white mb-1">3% a 7%</div>
+                        <p class="text-xs text-cyan-400 font-medium">Comissão de Sucesso sobre FOB</p>
+                    </div>
+                </div>
+                
+                <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Formatos de Cobrança -->
+                    <div class="glass-card p-8">
+                        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3"><i class="fa-solid fa-coins text-cyan-500"></i> Modelos de Cobrança</h3>
+                        <ul class="space-y-6">
+                            <li class="border-b border-white/5 pb-4">
+                                <h4 class="text-sm font-bold text-white mb-1">Consultoria de Viabilidade</h4>
+                                <p class="text-xs text-slate-400 font-light mb-2">Estudo inicial de NCM, impostos e restrições da ANVISA.</p>
+                                <span class="text-xs font-mono text-green-400 bg-green-400/10 px-2 py-1 rounded">R$ 1.500 a R$ 5.000 / projeto</span>
+                            </li>
+                            <li>
+                                <h4 class="text-sm font-bold text-white mb-1">Taxa de Sourcing</h4>
+                                <p class="text-xs text-slate-400 font-light mb-2">Localização, background check e validação do fabricante OEM.</p>
+                                <span class="text-xs font-mono text-green-400 bg-green-400/10 px-2 py-1 rounded">USD 1.500 a USD 3.000 / target</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Segurança Jurídica -->
+                    <div class="glass-card p-8 bg-gradient-to-br from-white/[0.02] to-cyan-900/10 border-cyan-500/10">
+                        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3"><i class="fa-solid fa-shield-halved text-cyan-500"></i> Segurança Jurídica</h3>
+                        <div class="space-y-5">
+                            <div>
+                                <h4 class="text-sm font-bold text-cyan-400 mb-1">Intermediação de Negócios</h4>
+                                <p class="text-xs text-slate-400 font-light leading-relaxed">Cláusulas contratuais que limitam a responsabilidade civil apenas à apresentação das partes, isolando o Agente do contrato de compra (<span class="tech-term">Proforma Invoice<span class="tooltip-box"><strong>Fatura Proforma</strong>Documento que formaliza a intenção de compra e venda internacional, contendo os detalhes comerciais do negócio antes do pagamento.</span></span>).</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-cyan-400 mb-1">Proteção "Vícios Ocultos"</h4>
+                                <p class="text-xs text-slate-400 font-light leading-relaxed">Isenção legal sobre <span class="tech-term">defeitos de fabricação<span class="tooltip-box"><strong>Vícios Ocultos</strong>Defeitos que não podem ser detectados em inspeção visual e que só aparecem com o uso contínuo do equipamento.</span></span> pós-desembaraço. Obriga o importador a arcar com os testes da SGS na Etapa 2 ou assumir o risco direto com a fábrica.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Zona Crítica (Danger Glass) -->
+    <section id="risco" class="py-24 px-6 mt-12">
+        <div class="max-w-6xl mx-auto">
+            <div class="glass-card bg-red-950/20 border-red-500/20 p-8 md:p-16 relative overflow-hidden">
+                <!-- Efeito Vermelho Pulsante -->
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/5 blur-[100px] rounded-full pointer-events-none animate-pulse-slow"></div>
+                
+                <div class="relative z-10 flex flex-col lg:flex-row gap-12 items-center">
+                    <div class="lg:w-1/3">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 text-5xl mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"></i>
+                        <h2 class="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">A Zona de Risco</h2>
+                        <p class="text-red-200/60 font-light leading-relaxed">A lista vermelha de erros fatais que geram multas confiscatórias e perdimento sumário de carga de alto ticket.</p>
+                    </div>
+                    
+                    <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-black/20 border border-red-500/10 p-6 rounded-2xl">
+                            <h4 class="text-white font-bold text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-red-500"></i> Subfaturamento</h4>
+                            <p class="text-xs text-slate-400 font-light leading-relaxed">Declarar valor menor para fraudar impostos (IA cruza dados cambiais). Pena: Multa de 100% da diferença e risco de perdimento da máquina.</p>
+                        </div>
+                        <div class="bg-black/20 border border-red-500/10 p-6 rounded-2xl">
+                            <h4 class="text-white font-bold text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-barcode text-red-500"></i> Erro de <span class="tech-term">NCM<span class="tooltip-box"><strong>Nomenclatura Comum do Mercosul</strong>Código numérico de 8 dígitos que define a tributação e as exigências administrativas (licenças) da mercadoria.</span></span></h4>
+                            <p class="text-xs text-slate-400 font-light leading-relaxed">Equipamentos médicos têm isenções específicas. Errar a classificação fiscal gera travamento em <span class="tech-term">Canal Vermelho<span class="tooltip-box"><strong>Canal de Parametrização</strong>Nível de fiscalização da Receita Federal onde há conferência documental e inspeção física da mercadoria aberta.</span></span> e multa de 1% do Valor Aduaneiro.</p>
+                        </div>
+                        <div class="bg-black/20 border border-red-500/10 p-6 rounded-2xl">
+                            <h4 class="text-white font-bold text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-building-circle-xmark text-red-500"></i> Falta de <span class="tech-term">AFE<span class="tooltip-box"><strong>Autorização de Funcionamento</strong>Licença da ANVISA obrigatória para empresas que atuam com importação, distribuição ou armazenamento de itens de saúde.</span></span></h4>
+                            <p class="text-xs text-slate-400 font-light leading-relaxed">Importar sem a empresa possuir Autorização de Funcionamento. A carga é impedida de entrar no país, forçando o retorno à origem com frete punitivo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Funcional -->
+    <footer class="py-16 px-6 border-t border-white/5 mt-12 bg-black/40">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-12">
+            <div class="md:w-1/3">
+                <div class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-4">MedImport Intelligence</div>
+                <p class="text-xs text-slate-500 font-light leading-relaxed mb-6 max-w-xs">Estação de trabalho e referência técnica para operações de arbitragem em Healthcare Technology.</p>
+                <div class="text-[10px] text-slate-700 font-bold uppercase tracking-widest">
+                    Framework v4.2 • Encrypted
+                </div>
+            </div>
+            
+            <div class="md:w-2/3 grid grid-cols-2 md:grid-cols-3 gap-8">
+                <!-- Links Governamentais (Funcionais) -->
+                <div class="col-span-2 md:col-span-1">
+                    <h6 class="text-white font-bold text-xs uppercase tracking-widest mb-4">Sistemas Oficiais</h6>
+                    <ul class="space-y-3">
+                        <li><a href="https://portalunico.siscomex.gov.br/" target="_blank" class="text-xs text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><i class="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-50"></i> Portal Siscomex</a></li>
+                        <li><a href="http://www4.receita.fazenda.gov.br/simulador/" target="_blank" class="text-xs text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><i class="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-50"></i> Simulador Receita RFB</a></li>
+                        <li><a href="https://www.gov.br/anvisa/pt-br" target="_blank" class="text-xs text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-2"><i class="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-50"></i> Portal ANVISA</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h6 class="text-white font-bold text-xs uppercase tracking-widest mb-4">Módulos</h6>
+                    <ul class="space-y-3">
+                        <li><a href="#arbitragem" class="text-xs text-slate-400 hover:text-white transition-colors">Tabela de Arbitragem</a></li>
+                        <li><a href="#workflow" class="text-xs text-slate-400 hover:text-white transition-colors">Workflow Logístico</a></li>
+                        <li><a href="#agente" class="text-xs text-slate-400 hover:text-white transition-colors">Guia de Monetização</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h6 class="text-white font-bold text-xs uppercase tracking-widest mb-4">Interface</h6>
+                    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-xs font-bold text-cyan-500 hover:text-cyan-400 transition-colors flex items-center gap-2 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20">
+                        Voltar ao Topo <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Lógica do Simulador Interativo
+        const inputUsd = document.getElementById('input-usd');
+        const inputEff = document.getElementById('input-eff');
+        const valUsd = document.getElementById('val-usd');
+        const valEff = document.getElementById('val-eff');
+        const resultProfit = document.getElementById('result-profit');
+
+        function updateSim() {
+            const usd = parseInt(inputUsd.value);
+            const eff = parseInt(inputEff.value) / 100;
+            
+            // Simulação de cálculo: (Investimento * Margem Base Otimista) * Câmbio Fictício
+            const profit = (usd * 0.65 * eff) * 5.2; 
+            
+            valUsd.textContent = `$${usd.toLocaleString()}`;
+            valEff.textContent = `${Math.round(eff * 100)}%`;
+            resultProfit.textContent = `R$ ${Math.round(profit).toLocaleString('pt-BR')}`;
+            
+            // Feedback visual no lucro
+            resultProfit.style.transform = 'scale(1.03)';
+            setTimeout(() => resultProfit.style.transform = 'scale(1)', 150);
+        }
+
+        inputUsd.addEventListener('input', updateSim);
+        inputEff.addEventListener('input', updateSim);
+
+        // Scroll Suave para a Navegação
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
